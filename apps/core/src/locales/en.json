@@ -1,0 +1,21 @@
+{
+  "error.badRequest": "Bad request",
+  "error.notFound": "Not found",
+  "error.goodsNotOnShelf": "Goods off shelf",
+  "error.goodsNotFound": "Goods not found",
+  "error.skuNotFound": "SKU not found",
+  "error.outOfStock": "Out of stock",
+  "error.orderNotFound": "Order not found",
+  "error.invalidQuantity": "Quantity must be 1-999",
+  "error.unauthorized": "Unauthorized",
+  "error.forbidden": "Forbidden",
+  "error.insufficientBalance": "Insufficient balance",
+  "error.orderAlreadyPaid": "Order already paid",
+  "error.orderExpired": "Order expired",
+  "error.signInvalid": "Invalid payment signature",
+  "error.amountMismatch": "Payment amount mismatch",
+  "error.gatewayBusy": "Payment gateway busy, try again",
+  "ok.created": "Created",
+  "ok.paid": "Paid",
+  "ok.delivered": "Delivered"
+}

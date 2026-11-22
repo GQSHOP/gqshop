@@ -1,0 +1,12 @@
+{
+  "name": "@gqshop/plugin-goods-general",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "内置插件：通用卡密发货（goods_general，共用卡池重复发+售出留痕）",
+  "main": "index.ts",
+  "types": "index.ts",
+  "dependencies": {
+    "@gqshop/plugin-api": "workspace:*"
+  }
+}

@@ -1,0 +1,34 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# Mimosa security scanner state (local tooling)
+.mimosa/
+
+# builds
+dist/
+build/
+*.tsbuildinfo
+
+# env & secrets — never commit
+.env
+.env.*
+!.env.example
+
+# logs / cache
+logs/
+*.log
+coverage/
+.turbo/
+.eslintcache
+
+# os / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# local verification artifacts
+.playwright-cli/
+/gqshop_final_*.png
+/gqshop_m4final_*.png

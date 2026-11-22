@@ -1,0 +1,12 @@
+{
+  "name": "@gqshop/plugin-pay-balance",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "内置插件：余额支付通道（balance；原子扣款路由在 core）",
+  "main": "index.ts",
+  "types": "index.ts",
+  "dependencies": {
+    "@gqshop/plugin-api": "workspace:*"
+  }
+}

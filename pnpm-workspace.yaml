@@ -1,0 +1,10 @@
+packages:
+  - "apps/*"
+  - "services/*"
+  - "packages/*"
+  - "packages/plugins/*"
+  - "templates/*"
+
+# pnpm 11 build-script approval (esbuild binaries needed by drizzle-kit/tsx)
+allowBuilds:
+  esbuild: true

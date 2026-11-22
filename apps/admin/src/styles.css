@@ -1,0 +1,306 @@
+/* GQSHOP admin console */
+:root {
+  --gq-primary: #1a6dff;
+  --gq-primary-dark: #0f56e0;
+  --gq-danger: #ff4d4f;
+  --gq-bg: #f0f3f8;
+  --gq-card: #fff;
+  --gq-text: #1f2329;
+  --gq-muted: #86909c;
+  --gq-radius: 14px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  background: var(--gq-bg);
+  color: var(--gq-text);
+}
+
+/* login（MKSHOP 双栏式对标，样式见文件尾 mk-login 段） */
+/* layout */
+.layout { display: flex; min-height: 100vh; }
+.layout-side {
+  width: 220px;
+  background: #16203a;
+  color: #cfd8ec;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 12px;
+  gap: 6px;
+}
+.side-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  padding: 6px 10px 16px;
+}
+.side-brand .brand-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--gq-primary);
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+}
+.side-item {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  color: inherit;
+  padding: 11px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.side-item:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 4px; }
+.side-foot a { color: #8ea6d8; font-size: 12px; text-decoration: none; padding: 8px 14px; }
+.layout-main { flex: 1; padding: 26px 30px; }
+.page-title { font-size: 20px; margin-bottom: 16px; }
+.section-title { font-size: 15px; margin: 20px 0 10px; }
+
+/* stats */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+}
+.stat-card {
+  background: var(--gq-card);
+  border-radius: var(--gq-radius);
+  padding: 18px;
+  box-shadow: 0 2px 8px rgba(20, 40, 80, 0.05);
+}
+.stat-label { color: var(--gq-muted); font-size: 13px; }
+.stat-value { font-size: 26px; font-weight: 700; margin-top: 6px; }
+
+/* table / forms */
+.table {
+  width: 100%;
+  background: var(--gq-card);
+  border-radius: var(--gq-radius);
+  border-collapse: collapse;
+  overflow: hidden;
+  font-size: 13px;
+}
+.table th, .table td {
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid #eef1f6;
+}
+.table th { color: var(--gq-muted); font-weight: 500; }
+.table tr.danger td { color: var(--gq-danger); }
+.panel {
+  background: var(--gq-card);
+  border-radius: var(--gq-radius);
+  padding: 18px;
+  margin: 14px 0;
+}
+.panel h3 { margin-bottom: 10px; }
+.toolbar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+  align-items: center;
+}
+.toolbar input, .toolbar select,
+.panel input, .panel select, .panel textarea {
+  padding: 9px 12px;
+  border: 1px solid #dfe3ea;
+  border-radius: 10px;
+  font-size: 13px;
+}
+.panel textarea { width: 100%; margin: 8px 0; }
+.panel input { width: 260px; margin: 4px 0; }
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.form-grid label, .panel > label.block {
+  font-size: 12px;
+  color: var(--gq-muted);
+  display: block;
+}
+.form-grid input, .form-grid select {
+  width: 100%;
+  margin-top: 4px;
+}
+
+
+/* ---- mk-login：双栏式登录页（对标 admin-ui，M4-δ） ---- */
+.mk-login-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  position: relative;
+  overflow: hidden;
+  font-family: Inter, "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  background:
+    radial-gradient(1200px 600px at 12% -10%, rgb(27 42 74) 0px, transparent 60%),
+    linear-gradient(140deg, rgb(11 19 34), rgb(14 26 46) 45%, rgb(10 17 32));
+  color: #0f172a;
+}
+.mk-deco-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 0),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 0);
+  background-size: 46px 46px;
+}
+.mk-deco-blob {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.55;
+  filter: blur(2px);
+}
+.mk-blob1 { width: 420px; height: 420px; background: rgba(47, 91, 255, 0.55); top: 12%; left: 18%; }
+.mk-blob2 { width: 380px; height: 380px; background: rgba(20, 130, 255, 0.3); bottom: 8%; right: 12%; }
+.mk-login-shell {
+  position: relative;
+  z-index: 1;
+  width: 980px;
+  max-width: calc(100vw - 40px);
+  height: 560px;
+  display: flex;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 40px 90px -40px rgba(4, 10, 26, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+.mk-brand-panel {
+  flex: 1 1 52%;
+  display: flex;
+  flex-direction: column;
+  padding: 30px 34px;
+  color: #e6ecff;
+  background:
+    radial-gradient(520px 320px at 88% 8%, rgba(47, 91, 255, 0.55), transparent 65%),
+    linear-gradient(160deg, rgb(22 35 60), rgb(13 23 41));
+}
+.mk-bp-top { display: flex; align-items: center; gap: 11px; color: #e6ecff; }
+.mk-brand-mark {
+  width: 36px; height: 36px;
+  display: grid; place-items: center;
+  border-radius: 11px;
+  background: linear-gradient(135deg, rgb(92 133 255), rgb(47 91 255) 55%, rgb(28 61 204));
+  color: #fff; font-weight: 800; font-size: 13px; letter-spacing: 0.6px;
+  box-shadow: 0 10px 22px -10px rgba(47, 91, 255, 0.95);
+}
+.mk-brand-text b { display: block; color: #fff; font-size: 15px; font-weight: 700; letter-spacing: 0.8px; }
+.mk-brand-text span { color: rgb(125 141 176); font-size: 12px; }
+.mk-bp-body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px; padding: 24px 0; }
+.mk-bp-hero { color: #fff; font-size: 27px; line-height: 1.42; font-weight: 700; margin: 0 0 6px; }
+.mk-bp-sub { margin: 0 0 10px; color: rgb(125 141 176); font-size: 13px; line-height: 1.8; max-width: 400px; }
+.mk-bp-points { list-style: none; display: flex; flex-direction: column; gap: 14px; margin: 0; padding: 0; }
+.mk-bp-points li { display: flex; align-items: flex-start; gap: 12px; }
+.mk-bp-points li i {
+  width: 28px; height: 28px; flex: 0 0 28px;
+  display: grid; place-items: center;
+  border-radius: 9px;
+  background: rgba(47, 91, 255, 0.16);
+  border: 1px solid rgba(120, 160, 255, 0.18);
+  color: rgb(159 188 255);
+  font-size: 14px;
+}
+.mk-bp-points li b { display: block; color: #fff; font-size: 13.5px; }
+.mk-bp-points li em { font-style: normal; color: rgb(125 141 176); font-size: 12px; }
+.mk-bp-foot { color: rgb(93 108 140); font-size: 11px; }
+
+.mk-form-panel {
+  flex: 1 1 48%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 34px 40px;
+  background: #fff;
+}
+.mk-form-inner { width: 100%; max-width: 391px; }
+.mk-form-inner h2 { font-size: 22px; font-weight: 700; color: #0f172a; margin: 0 0 6px; }
+.mk-sub { color: rgb(148 163 184); font-size: 13px; margin: 0 0 26px; }
+.mk-input-row {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  margin-bottom: 14px;
+  border-radius: 10px;
+  background: rgb(251 252 254);
+  border: 1px solid rgb(226 232 240);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.mk-input-row:focus-within {
+  border-color: rgb(47 91 255);
+  box-shadow: 0 0 0 3px rgba(47, 91, 255, 0.14);
+}
+.mk-input-icon { width: 34px; text-align: center; color: rgb(148 163 184); font-size: 15px; }
+.mk-input-row input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-size: 13.5px;
+  color: #0f172a;
+  padding-right: 14px;
+}
+.mk-notice-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgb(241 245 249);
+  border-radius: 8px;
+  padding: 9px 12px;
+  margin: 4px 0 10px;
+  color: rgb(100 116 139);
+  font-size: 12px;
+}
+.mk-notice-strip i { color: rgb(47 91 255); }
+.mk-login-btn {
+  width: 100%;
+  height: 44px;
+  margin-top: 6px;
+  border: 0;
+  border-radius: 10px;
+  background: rgb(47 91 255);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.mk-login-btn:hover { background: rgb(38 74 214); }
+.mk-login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+@media (max-width: 900px) {
+  .mk-login-shell { height: auto; flex-direction: column; }
+  .mk-brand-panel { padding: 24px; }
+  .mk-bp-body { padding: 16px 0; }
+  .mk-form-panel { padding: 26px 24px; }
+}
+
+/* ---- mk-login 精修（浏览器建议 + 特性图标抛光） ---- */
+.mk-browser-hint {
+  text-align: center;
+  color: rgb(148 163 184);
+  font-size: 12px;
+  letter-spacing: 0.2px;
+  margin: 26px 0 0;
+}
+.mk-bp-points li i {
+  font-size: 15px;
+  box-shadow: inset 0 0 0 1px rgba(120, 160, 255, 0.12);
+}
+.mk-bp-points li span b {
+  letter-spacing: 0.2px;
+}
+.mk-brand-text span {
+  font-size: 11.5px;
+  letter-spacing: 0.3px;
+}

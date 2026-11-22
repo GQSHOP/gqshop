@@ -1,0 +1,68 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: gqshop-dev-pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${GQSHOP_DEV_PG_PASSWORD:-gqshop_dev}
+      POSTGRES_DB: gqshop
+    ports:
+      - "127.0.0.1:15432:5432"
+    volumes:
+      - gqshop-dev-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [gqshop_dev]
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: gqshop-dev-redis
+    restart: unless-stopped
+    command: redis-server --maxmemory 200mb --maxmemory-policy allkeys-lru
+    ports:
+      - "127.0.0.1:16379:6379"
+    volumes:
+      - gqshop-dev-redis:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [gqshop_dev]
+
+  core:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gqshop-dev-core
+    restart: unless-stopped
+    environment:
+      GQSHOP_DB_HOST: db
+      GQSHOP_DB_PORT: 5432
+      GQSHOP_DB_USER: postgres
+      GQSHOP_DB_PASSWORD: ${GQSHOP_DEV_PG_PASSWORD:-gqshop_dev}
+      GQSHOP_DB_NAME: gqshop
+      GQSHOP_JWT_SECRET: ${GQSHOP_DEV_JWT_SECRET:-dev-only-change-me}
+      GQSHOP_ADMIN_KEY: ${GQSHOP_DEV_ADMIN_KEY:?请在 .env 设置 GQSHOP_DEV_ADMIN_KEY（后台机器通道密钥）}
+      GQSHOP_TEMPLATES_ROOT: /repo/templates
+      GQSHOP_PORT: 8100
+      NODE_ENV: production
+    ports:
+      - "8100:8100"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks: [gqshop_dev]
+
+networks:
+  gqshop_dev:
+    driver: bridge
+
+volumes:
+  gqshop-dev-pg:
+  gqshop-dev-redis:

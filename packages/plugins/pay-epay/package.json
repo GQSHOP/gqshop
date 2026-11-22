@@ -1,0 +1,12 @@
+{
+  "name": "@gqshop/plugin-pay-epay",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "内置插件：易支付通道（epay_ali/epay_wx；submit/notify 路由在 core，本插件注册清单与下单校验）",
+  "main": "index.ts",
+  "types": "index.ts",
+  "dependencies": {
+    "@gqshop/plugin-api": "workspace:*"
+  }
+}

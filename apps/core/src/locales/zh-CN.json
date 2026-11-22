@@ -1,0 +1,21 @@
+{
+  "error.badRequest": "请求参数错误",
+  "error.notFound": "资源不存在",
+  "error.goodsNotOnShelf": "商品已下架",
+  "error.goodsNotFound": "商品不存在",
+  "error.skuNotFound": "规格不存在",
+  "error.outOfStock": "库存不足",
+  "error.orderNotFound": "订单不存在",
+  "error.invalidQuantity": "购买数量必须为 1-999",
+  "error.unauthorized": "未登录或凭证无效",
+  "error.forbidden": "无权操作",
+  "error.insufficientBalance": "余额不足",
+  "error.orderAlreadyPaid": "订单已支付，请勿重复支付",
+  "error.orderExpired": "订单已过期",
+  "error.signInvalid": "支付验签失败",
+  "error.amountMismatch": "支付金额与订单不符",
+  "error.gatewayBusy": "支付网关繁忙，请稍后重试",
+  "ok.created": "创建成功",
+  "ok.paid": "支付成功",
+  "ok.delivered": "发货完成"
+}

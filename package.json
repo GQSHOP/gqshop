@@ -1,0 +1,17 @@
+{
+  "name": "gqshop-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "description": "GQSHOP 搞钱商城 — 自部署开源电商系统（Node.js + Hono + PostgreSQL）",
+  "license": "UNLICENSED",
+  "packageManager": "pnpm@11.8.0",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint"
+  }
+}

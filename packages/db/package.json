@@ -1,0 +1,24 @@
+{
+  "name": "@gqshop/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "GQSHOP database layer — Drizzle schema (78 tables) + client factory",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "echo 'no tests yet'",
+    "generate": "python -I ../../tools/gen-drizzle.py",
+    "db:generate": "drizzle-kit generate"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.44.2",
+    "pg": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.15.0",
+    "drizzle-kit": "^0.31.0",
+    "typescript": "^5.8.0"
+  }
+}

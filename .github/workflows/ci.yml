@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.8.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile=false
+
+      - name: Typecheck
+        run: pnpm -r typecheck
+
+      - name: Tests
+        run: pnpm -r test
+
+      - name: Schema parity check (78 tables)
+        run: |
+          python3 - <<'PY'
+          import re, io, sys
+          n = 0
+          for f in ["packages/db/src/schema/%s.ts" % d for d in ["user","goods","order","station","docking","physical","content","system"]]:
+              src = io.open(f, encoding="utf-8").read()
+              n += len(re.findall(r"pgTable\(\n\s+\"dc_", src))
+          print("pgTable exports:", n)
+          assert n == 78, f"expected 78 tables, found {n}"
+          PY

@@ -1,0 +1,35 @@
+{
+  "name": "@gqshop/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "GQSHOP core — Hono HTTP app (M0: healthz + auth against dc_user)",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "tsx src/main.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test \"test/*.test.ts\"",
+    "install:cli": "tsx src/install-cli.ts"
+  },
+  "dependencies": {
+    "@gqshop/db": "workspace:*",
+    "@hono/node-server": "^1.14.0",
+    "bcryptjs": "^3.0.2",
+    "drizzle-orm": "^0.44.2",
+    "hono": "^4.9.0",
+    "pg": "^8.16.0",
+    "@gqshop/plugin-api": "workspace:*",
+    "@gqshop/plugin-goods-once": "workspace:*",
+    "@gqshop/plugin-goods-general": "workspace:*",
+    "@gqshop/plugin-goods-service": "workspace:*",
+    "@gqshop/plugin-pay-epay": "workspace:*",
+    "@gqshop/plugin-pay-balance": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0",
+    "@types/pg": "^8.15.0"
+  }
+}

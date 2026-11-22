@@ -1,0 +1,9 @@
+{
+  "name": "@gqshop/plugin-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "GQSHOP 插件契约（ADR-008 P1/P2）：definePlugin / HookMap / PluginBus / PluginContext",
+  "main": "index.ts",
+  "types": "index.ts"
+}
