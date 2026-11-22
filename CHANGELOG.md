@@ -5,6 +5,38 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-23
+
+架构自主与生态闭环版本：命名自主、内核-域三层架构、应用市场、佣金真算法。
+
+### 新增（M6 应用市场，ADR-011）
+- **可信分发链**：市场包 sha256 + ed25519 双验签、zip-slip 防护、manifest 白名单校验
+- **市场源抽象**：本地目录（LocalMarketSource）/ HTTP 远端（HttpMarketSource，SSRF 防线）
+- **安装/升级/回滚/卸载**：版本目录共存 + installed.json 指针；重启生效（不热加载）
+- **外部插件动态加载**：installed.json → data/plugins/{name}/{version}/index.js，失败隔离
+- **admin 应用市场页**：浏览/安装/升级/回滚/卸载 + 密钥工具链（market-keys/pack-plugin）
+- **epay 路由完全插件化**（M6-γ）：PluginContext.registerRoute 扩展点；pay-epay 插件接管
+  submit（代取+SSRF 防线）与 notify（MD5 验签+回调日志）——新增支付通道零改 core
+- **X-Admin-Key 机器通道默认退役**：admin 会话票唯一通道（GQSHOP_ADMIN_KEY_CHANNEL=on 兼容开关，下版删除）
+
+### 新增（R1 命名自主，ADR-010）
+- 表前缀 dc_→gq_（78 表 + 索引/序列 + 0003 RENAME 迁移）、CSS 命名空间 dc-→gq-、gqskin 资产目录
+
+### 新增（R2 内核-域拆包，ADR-010）
+- **packages/kernel**（横切内核）+ **packages/domains/{trade,wallet,station,content,members}** 五域包
+- apps/core 瘦身为装配薄壳；**域间零横向依赖**（事件总线 + 注册表解耦，CI 门禁强制）
+- 事件总线事务透传：pay:settled 携带 executor，佣金/分店分成/实物发货单与结算同事务（资金原子性保持）
+
+### 新增（M7 代码级对标，ADR-009）
+- **佣金真算法**（还原对齐）：池模型（total/profit 成本差基数）、池递减链、起提线、池帽、
+  等级门槛/无限分销/跳级、分店互斥、退款反扣、升级佣金
+- **价格链补 user_price 层**（注册用户价）+ 会员价过期校验 + stock:low 告警事件
+
+### 安全
+- M5 全面审计修复（3 高危 + 3 中危 + 5 低危）：余额支付统一履约、关单超卖、详情脱敏、
+  越权替付、提现流水、双发窗口；IPv6 SSRF 拦截；登录限流锁定
+- 市场密钥轮换事件响应（E2E 私钥误入库即作废轮换，无实际影响）
+
 ## [1.0.0] - 2026-11-22
 
 首个完整版本：交易闭环 + 会员资金 + 多租户 + 内容系统 + 扩展体系，真实支付 E2E 验证。

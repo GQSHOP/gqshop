@@ -13,12 +13,12 @@ import {
 
 /**
  * 分店主表（uid/level/slug/独立 SEO/软删）
- * MySQL 原表：`dc_station`
+ * MySQL 原表：`gq_station`
  */
 export const stationTable = pgTable(
-  "dc_station",
+  "gq_station",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_station_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_station_id_seq" }),
     user_id: integer(),
     pid: integer(),
     level_id: integer(),
@@ -53,12 +53,12 @@ export const stationTable = pgTable(
 
 /**
  * 分店商品同步映射
- * MySQL 原表：`dc_station_goods`
+ * MySQL 原表：`gq_station_goods`
  */
 export const stationGoodsTable = pgTable(
-  "dc_station_goods",
+  "gq_station_goods",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_station_goods_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_station_goods_id_seq" }),
     station_id: integer(),
     goods_id: integer(),
     premium: numeric({ precision: 10, scale: 2 }),
@@ -69,12 +69,12 @@ export const stationGoodsTable = pgTable(
 
 /**
  * 分店等级（5 档种子：基础0/入门29/标准99/专业199/旗舰399）
- * MySQL 原表：`dc_station_level`
+ * MySQL 原表：`gq_station_level`
  */
 export const stationLevelTable = pgTable(
-  "dc_station_level",
+  "gq_station_level",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_station_level_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_station_level_id_seq" }),
     name: varchar({ length: 150 }),
     icon: varchar({ length: 100 }).default('ri-store-2-line').notNull(),
     icon_image: varchar({ length: 255 }).default('').notNull(),
@@ -102,16 +102,16 @@ export const stationLevelTable = pgTable(
     upgrade_sub_count: integer().default(0).notNull(),
   },
   (t) => [
-    index("dc_station_level_idx_sort").on(t.sort),
+    index("gq_station_level_idx_sort").on(t.sort),
   ],
 );
 
 /**
  * 分店可用插件/模板
- * MySQL 原表：`dc_station_plugin`
+ * MySQL 原表：`gq_station_plugin`
  */
 export const stationPluginTable = pgTable(
-  "dc_station_plugin",
+  "gq_station_plugin",
   {
     station_id: integer(),
     plugin_id: integer(),
@@ -125,12 +125,12 @@ export const stationPluginTable = pgTable(
 
 /**
  * 分店分类同步映射
- * MySQL 原表：`dc_station_sort`
+ * MySQL 原表：`gq_station_sort`
  */
 export const stationSortTable = pgTable(
-  "dc_station_sort",
+  "gq_station_sort",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_station_sort_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_station_sort_id_seq" }),
     station_id: integer(),
     sort_id: integer(),
     custom_name: varchar({ length: 255 }),
@@ -141,12 +141,12 @@ export const stationSortTable = pgTable(
 
 /**
  * 分店存储
- * MySQL 原表：`dc_station_storage`
+ * MySQL 原表：`gq_station_storage`
  */
 export const stationStorageTable = pgTable(
-  "dc_station_storage",
+  "gq_station_storage",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_station_storage_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_station_storage_id_seq" }),
     station_id: integer().notNull(),
     type: varchar({ length: 10 }),
     plugin_name: varchar({ length: 100 }),
@@ -154,6 +154,6 @@ export const stationStorageTable = pgTable(
     option_value: text(),
   },
   (t) => [
-    uniqueIndex("dc_station_storage_tpl").on(t.station_id, t.type, t.plugin_name, t.option_name),
+    uniqueIndex("gq_station_storage_tpl").on(t.station_id, t.type, t.plugin_name, t.option_name),
   ],
 );

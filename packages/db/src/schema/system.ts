@@ -13,10 +13,10 @@ import {
 
 /**
  * 授权信息（复刻时剔除重写）
- * MySQL 原表：`dc_authorization`
+ * MySQL 原表：`gq_authorization`
  */
 export const authorizationTable = pgTable(
-  "dc_authorization",
+  "gq_authorization",
   {
     emkey: varchar({ length: 32 }),
     domain: varchar({ length: 100 }),
@@ -26,34 +26,34 @@ export const authorizationTable = pgTable(
 
 /**
  * 全站配置 KV（约 90+ 项，序列化存储）
- * MySQL 原表：`dc_options`
+ * MySQL 原表：`gq_options`
  */
 export const optionsTable = pgTable(
-  "dc_options",
+  "gq_options",
   {
-    option_id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_options_option_id_seq" }),
+    option_id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_options_option_id_seq" }),
     option_name: varchar({ length: 75 }).notNull(),
     option_value: text().notNull(),
   },
   (t) => [
-    uniqueIndex("dc_options_option_name_uindex").on(t.option_name),
+    uniqueIndex("gq_options_option_name_uindex").on(t.option_name),
   ],
 );
 
 /**
  * 模板配置数据（front_default 等）
- * MySQL 原表：`dc_tpl_options_data`
+ * MySQL 原表：`gq_tpl_options_data`
  */
 export const tplOptionsDataTable = pgTable(
-  "dc_tpl_options_data",
+  "gq_tpl_options_data",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_tpl_options_data_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_tpl_options_data_id_seq" }),
     template: varchar({ length: 64 }).notNull(),
     name: varchar({ length: 64 }).notNull(),
     depend: varchar({ length: 64 }).default('').notNull(),
     data: text().notNull(),
   },
   (t) => [
-    uniqueIndex("dc_tpl_options_data_template").on(t.template, t.name),
+    uniqueIndex("gq_tpl_options_data_template").on(t.template, t.name),
   ],
 );

@@ -13,12 +13,12 @@ import {
 
 /**
  * 商品主表（类型/模板/跳转/加价规则引用/允许对接等）
- * MySQL 原表：`dc_goods`
+ * MySQL 原表：`gq_goods`
  */
 export const goodsTable = pgTable(
-  "dc_goods",
+  "gq_goods",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_goods_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_goods_id_seq" }),
     station_id: integer().default(0).notNull(),
     des: text(),
     sort_num: integer().default(0).notNull(),
@@ -52,20 +52,20 @@ export const goodsTable = pgTable(
     discount_title: varchar({ length: 32 }).default('').notNull(),
   },
   (t) => [
-    index("dc_goods_sortid").on(t.sort_id),
-    index("dc_goods_top").on(t.create_time),
-    index("dc_goods_date").on(t.create_time),
+    index("gq_goods_sortid").on(t.sort_id),
+    index("gq_goods_top").on(t.create_time),
+    index("gq_goods_date").on(t.create_time),
   ],
 );
 
 /**
  * 通用卡密库存（多商品共用卡池）
- * MySQL 原表：`dc_goods_general`
+ * MySQL 原表：`gq_goods_general`
  */
 export const goodsGeneralTable = pgTable(
-  "dc_goods_general",
+  "gq_goods_general",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_goods_general_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_goods_general_id_seq" }),
     goods_id: integer().default(0).notNull(),
     sku: varchar({ length: 50 }).default('0').notNull(),
     content: text(),
@@ -76,12 +76,12 @@ export const goodsGeneralTable = pgTable(
 
 /**
  * 通用卡密售出记录
- * MySQL 原表：`dc_goods_general_sale`
+ * MySQL 原表：`gq_goods_general_sale`
  */
 export const goodsGeneralSaleTable = pgTable(
-  "dc_goods_general_sale",
+  "gq_goods_general_sale",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_goods_general_sale_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_goods_general_sale_id_seq" }),
     goods_id: integer().default(0).notNull(),
     order_list_id: integer().default(0).notNull(),
     sku: varchar({ length: 50 }).default('0').notNull(),
@@ -94,12 +94,12 @@ export const goodsGeneralSaleTable = pgTable(
 
 /**
  * 一卡一密库存（每条绑订单）
- * MySQL 原表：`dc_goods_once`
+ * MySQL 原表：`gq_goods_once`
  */
 export const goodsOnceTable = pgTable(
-  "dc_goods_once",
+  "gq_goods_once",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_goods_once_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_goods_once_id_seq" }),
     goods_id: integer().default(0).notNull(),
     sku: varchar({ length: 50 }).default('0').notNull(),
     batch_no: varchar({ length: 50 }),
@@ -113,12 +113,12 @@ export const goodsOnceTable = pgTable(
 
 /**
  * 虚拟服务（人工/自动交付内容）
- * MySQL 原表：`dc_goods_service`
+ * MySQL 原表：`gq_goods_service`
  */
 export const goodsServiceTable = pgTable(
-  "dc_goods_service",
+  "gq_goods_service",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_goods_service_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_goods_service_id_seq" }),
     goods_id: integer().default(0).notNull(),
     content: varchar({ length: 255 }),
     sku: varchar({ length: 50 }).default('0').notNull(),
@@ -129,12 +129,12 @@ export const goodsServiceTable = pgTable(
 
 /**
  * 虚拟服务售出记录
- * MySQL 原表：`dc_goods_service_sale`
+ * MySQL 原表：`gq_goods_service_sale`
  */
 export const goodsServiceSaleTable = pgTable(
-  "dc_goods_service_sale",
+  "gq_goods_service_sale",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_goods_service_sale_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_goods_service_sale_id_seq" }),
     goods_id: integer().default(0).notNull(),
     order_list_id: integer().default(0).notNull(),
     sku: varchar({ length: 50 }).default('0').notNull(),
@@ -148,12 +148,12 @@ export const goodsServiceSaleTable = pgTable(
 
 /**
  * 商品类型（对应插件注册）
- * MySQL 原表：`dc_goods_type`
+ * MySQL 原表：`gq_goods_type`
  */
 export const goodsTypeTable = pgTable(
-  "dc_goods_type",
+  "gq_goods_type",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_goods_type_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_goods_type_id_seq" }),
     name: varchar({ length: 255 }),
     delete_time: bigint({ mode: 'number' }),
     hide: varchar({ length: 10 }).default('n').notNull(),
@@ -162,12 +162,12 @@ export const goodsTypeTable = pgTable(
 
 /**
  * 规格属性名
- * MySQL 原表：`dc_sku_attr`
+ * MySQL 原表：`gq_sku_attr`
  */
 export const skuAttrTable = pgTable(
-  "dc_sku_attr",
+  "gq_sku_attr",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_sku_attr_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_sku_attr_id_seq" }),
     type_id: integer(),
     title: varchar({ length: 255 }),
     delete_time: bigint({ mode: 'number' }),
@@ -176,12 +176,12 @@ export const skuAttrTable = pgTable(
 
 /**
  * 规格属性值
- * MySQL 原表：`dc_sku_value`
+ * MySQL 原表：`gq_sku_value`
  */
 export const skuValueTable = pgTable(
-  "dc_sku_value",
+  "gq_sku_value",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_sku_value_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_sku_value_id_seq" }),
     attr_id: integer(),
     name: varchar({ length: 255 }),
     delete_time: bigint({ mode: 'number' }),
@@ -190,10 +190,10 @@ export const skuValueTable = pgTable(
 
 /**
  * SKU 组合（价格/成本/库存/销量）
- * MySQL 原表：`dc_skus`
+ * MySQL 原表：`gq_skus`
  */
 export const skusTable = pgTable(
-  "dc_skus",
+  "gq_skus",
   {
     code: varchar({ length: 50 }),
     goods_id: integer().notNull(),
@@ -208,18 +208,18 @@ export const skusTable = pgTable(
     sales: integer().default(0),
   },
   (t) => [
-    index("dc_skus_idx_goods_sku").on(t.goods_id, t.sku),
+    index("gq_skus_idx_goods_sku").on(t.goods_id, t.sku),
   ],
 );
 
 /**
  * 分类（商品+文章双用）
- * MySQL 原表：`dc_sort`
+ * MySQL 原表：`gq_sort`
  */
 export const sortTable = pgTable(
-  "dc_sort",
+  "gq_sort",
   {
-    sid: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_sort_sid_seq" }),
+    sid: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_sort_sid_seq" }),
     type: varchar({ length: 20 }).default('goods').notNull(),
     sortname: varchar({ length: 255 }).default('').notNull(),
     alias: varchar({ length: 255 }).default('').notNull(),
@@ -238,12 +238,12 @@ export const sortTable = pgTable(
 
 /**
  * 库存视图（未售/已售）
- * MySQL 原表：`dc_stock`
+ * MySQL 原表：`gq_stock`
  */
 export const stockTable = pgTable(
-  "dc_stock",
+  "gq_stock",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_stock_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_stock_id_seq" }),
     code: varchar({ length: 50 }),
     goods_id: integer().notNull(),
     sku: varchar({ length: 255 }).default('0').notNull(),
@@ -254,12 +254,12 @@ export const stockTable = pgTable(
 
 /**
  * 卡密导出留痕
- * MySQL 原表：`dc_stock_export_log`
+ * MySQL 原表：`gq_stock_export_log`
  */
 export const stockExportLogTable = pgTable(
-  "dc_stock_export_log",
+  "gq_stock_export_log",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_stock_export_log_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_stock_export_log_id_seq" }),
     goods_id: integer(),
     filename: varchar({ length: 255 }),
     create_time: bigint({ mode: 'number' }),
@@ -268,12 +268,12 @@ export const stockExportLogTable = pgTable(
 
 /**
  * 仓库/存储抽象
- * MySQL 原表：`dc_storage`
+ * MySQL 原表：`gq_storage`
  */
 export const storageTable = pgTable(
-  "dc_storage",
+  "gq_storage",
   {
-    sid: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_storage_sid_seq" }),
+    sid: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_storage_sid_seq" }),
     plugin: varchar({ length: 32 }).notNull(),
     name: varchar({ length: 32 }).notNull(),
     type: varchar({ length: 8 }).notNull(),
@@ -282,18 +282,18 @@ export const storageTable = pgTable(
     lastupdate: integer().notNull(),
   },
   (t) => [
-    uniqueIndex("dc_storage_plugin").on(t.plugin, t.name),
+    uniqueIndex("gq_storage_plugin").on(t.plugin, t.name),
   ],
 );
 
 /**
  * 标签
- * MySQL 原表：`dc_tag`
+ * MySQL 原表：`gq_tag`
  */
 export const tagTable = pgTable(
-  "dc_tag",
+  "gq_tag",
   {
-    tid: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_tag_tid_seq" }),
+    tid: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_tag_tid_seq" }),
     tagname: varchar({ length: 60 }).default('').notNull(),
     description: varchar({ length: 2048 }).default('').notNull(),
     title: varchar({ length: 2048 }).default('').notNull(),
@@ -301,6 +301,6 @@ export const tagTable = pgTable(
     gid: text().notNull(),
   },
   (t) => [
-    index("dc_tag_tagname").on(t.tagname),
+    index("gq_tag_tagname").on(t.tagname),
   ],
 );

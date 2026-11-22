@@ -41,6 +41,24 @@ importers:
       '@gqshop/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@gqshop/domain-content':
+        specifier: workspace:*
+        version: link:../../packages/domains/content
+      '@gqshop/domain-members':
+        specifier: workspace:*
+        version: link:../../packages/domains/members
+      '@gqshop/domain-station':
+        specifier: workspace:*
+        version: link:../../packages/domains/station
+      '@gqshop/domain-trade':
+        specifier: workspace:*
+        version: link:../../packages/domains/trade
+      '@gqshop/domain-wallet':
+        specifier: workspace:*
+        version: link:../../packages/domains/wallet
+      '@gqshop/kernel':
+        specifier: workspace:*
+        version: link:../../packages/kernel
       '@gqshop/plugin-api':
         specifier: workspace:*
         version: link:../../packages/plugins/api
@@ -135,6 +153,192 @@ importers:
         specifier: ^5.8.0
         version: 5.9.3
 
+  packages/domains/content:
+    dependencies:
+      '@gqshop/db':
+        specifier: workspace:*
+        version: link:../../db
+      '@gqshop/kernel':
+        specifier: workspace:*
+        version: link:../../kernel
+      '@gqshop/plugin-api':
+        specifier: workspace:*
+        version: link:../../plugins/api
+      drizzle-orm:
+        specifier: ^0.44.2
+        version: 0.44.7(@types/pg@8.23.1)(pg@8.23.1)
+      hono:
+        specifier: ^4.9.0
+        version: 4.13.19
+      pg:
+        specifier: ^8.16.0
+        version: 8.23.1
+    devDependencies:
+      '@types/pg':
+        specifier: ^8.11.0
+        version: 8.23.1
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+
+  packages/domains/members:
+    dependencies:
+      '@gqshop/db':
+        specifier: workspace:*
+        version: link:../../db
+      '@gqshop/kernel':
+        specifier: workspace:*
+        version: link:../../kernel
+      '@gqshop/plugin-api':
+        specifier: workspace:*
+        version: link:../../plugins/api
+      drizzle-orm:
+        specifier: ^0.44.2
+        version: 0.44.7(@types/pg@8.23.1)(pg@8.23.1)
+      hono:
+        specifier: ^4.9.0
+        version: 4.13.19
+      pg:
+        specifier: ^8.16.0
+        version: 8.23.1
+    devDependencies:
+      '@types/pg':
+        specifier: ^8.11.0
+        version: 8.23.1
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+
+  packages/domains/station:
+    dependencies:
+      '@gqshop/db':
+        specifier: workspace:*
+        version: link:../../db
+      '@gqshop/kernel':
+        specifier: workspace:*
+        version: link:../../kernel
+      '@gqshop/plugin-api':
+        specifier: workspace:*
+        version: link:../../plugins/api
+      drizzle-orm:
+        specifier: ^0.44.2
+        version: 0.44.7(@types/pg@8.23.1)(pg@8.23.1)
+      hono:
+        specifier: ^4.9.0
+        version: 4.13.19
+      pg:
+        specifier: ^8.16.0
+        version: 8.23.1
+    devDependencies:
+      '@types/pg':
+        specifier: ^8.11.0
+        version: 8.23.1
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+
+  packages/domains/trade:
+    dependencies:
+      '@gqshop/db':
+        specifier: workspace:*
+        version: link:../../db
+      '@gqshop/kernel':
+        specifier: workspace:*
+        version: link:../../kernel
+      '@gqshop/plugin-api':
+        specifier: workspace:*
+        version: link:../../plugins/api
+      drizzle-orm:
+        specifier: ^0.44.2
+        version: 0.44.7(@types/pg@8.23.1)(pg@8.23.1)
+      hono:
+        specifier: ^4.9.0
+        version: 4.13.19
+      pg:
+        specifier: ^8.16.0
+        version: 8.23.1
+    devDependencies:
+      '@types/pg':
+        specifier: ^8.11.0
+        version: 8.23.1
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+
+  packages/domains/wallet:
+    dependencies:
+      '@gqshop/db':
+        specifier: workspace:*
+        version: link:../../db
+      '@gqshop/kernel':
+        specifier: workspace:*
+        version: link:../../kernel
+      drizzle-orm:
+        specifier: ^0.44.2
+        version: 0.44.7(@types/pg@8.23.1)(pg@8.23.1)
+      hono:
+        specifier: ^4.9.0
+        version: 4.13.19
+      pg:
+        specifier: ^8.16.0
+        version: 8.23.1
+    devDependencies:
+      '@types/pg':
+        specifier: ^8.11.0
+        version: 8.23.1
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+
+  packages/kernel:
+    dependencies:
+      '@gqshop/db':
+        specifier: workspace:*
+        version: link:../db
+      '@gqshop/plugin-api':
+        specifier: workspace:*
+        version: link:../plugins/api
+      '@gqshop/plugin-goods-general':
+        specifier: workspace:*
+        version: link:../plugins/goods-general
+      '@gqshop/plugin-goods-once':
+        specifier: workspace:*
+        version: link:../plugins/goods-once
+      '@gqshop/plugin-goods-service':
+        specifier: workspace:*
+        version: link:../plugins/goods-service
+      '@gqshop/plugin-pay-balance':
+        specifier: workspace:*
+        version: link:../plugins/pay-balance
+      '@gqshop/plugin-pay-epay':
+        specifier: workspace:*
+        version: link:../plugins/pay-epay
+      adm-zip:
+        specifier: ^0.5.16
+        version: 0.5.18
+      bcryptjs:
+        specifier: ^3.0.2
+        version: 3.0.3
+      drizzle-orm:
+        specifier: ^0.44.2
+        version: 0.44.7(@types/pg@8.23.1)(pg@8.23.1)
+      hono:
+        specifier: ^4.9.0
+        version: 4.13.19
+      pg:
+        specifier: ^8.16.0
+        version: 8.23.1
+    devDependencies:
+      '@types/adm-zip':
+        specifier: ^0.5.7
+        version: 0.5.8
+      '@types/pg':
+        specifier: ^8.11.0
+        version: 8.23.1
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+
   packages/plugins/api: {}
 
   packages/plugins/goods-general:
@@ -163,9 +367,19 @@ importers:
 
   packages/plugins/pay-epay:
     dependencies:
+      '@gqshop/domain-trade':
+        specifier: workspace:*
+        version: link:../../domains/trade
+      '@gqshop/kernel':
+        specifier: workspace:*
+        version: link:../../kernel
       '@gqshop/plugin-api':
         specifier: workspace:*
         version: link:../api
+    devDependencies:
+      '@types/pg':
+        specifier: ^8.11.0
+        version: 8.23.1
 
   templates/default:
     dependencies:
@@ -225,6 +439,12 @@ importers:
       vite:
         specifier: ^6.3.0
         version: 6.4.6(@types/node@24.19.2)(tsx@4.23.15)
+
+  tools:
+    dependencies:
+      adm-zip:
+        specifier: ^0.5.16
+        version: 0.5.18
 
 packages:
 
@@ -934,6 +1154,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@types/adm-zip@0.5.8':
+    resolution: {integrity: sha512-RVVH7QvZYbN+ihqZ4kX/dMiowf6o+Jk1fNwiSdx0NahBJLU787zkULhGhJM8mf/obmLGmgdMM0bXsQTmyfbR7Q==}
+
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
 
@@ -968,6 +1191,10 @@ packages:
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       vite: ^4.2.0 || ^5.0.0 || ^6.0.0 || ^7.0.0
+
+  adm-zip@0.5.18:
+    resolution: {integrity: sha512-ufJnssQGbxzLNS1Ho9bCtX4rQKCCvoVuDLHoJyc3F9dOGDB4BkWs2Ci0kv53lqocAEQ/Cbi+I2XCsNYGqVYqng==}
+    engines: {node: '>=12.0'}
 
   baseline-browser-mapping@2.11.39:
     resolution: {integrity: sha512-Q9buOYhr2ggrEZpImICecZTJHCCd8yXkRUokFlUEQ8uiD6oP82F4W4jWnhOHZYV+wlvrC51V7Wy0ULyWjil5Wg==}
@@ -1827,6 +2054,10 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.68.7':
     optional: true
 
+  '@types/adm-zip@0.5.8':
+    dependencies:
+      '@types/node': 24.19.2
+
   '@types/babel__core@7.20.5':
     dependencies:
       '@babel/parser': 7.29.14
@@ -1879,6 +2110,8 @@ snapshots:
       vite: 6.4.6(@types/node@24.19.2)(tsx@4.23.15)
     transitivePeerDependencies:
       - supports-color
+
+  adm-zip@0.5.18: {}
 
   baseline-browser-mapping@2.11.39: {}
 

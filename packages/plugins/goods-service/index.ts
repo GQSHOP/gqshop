@@ -12,7 +12,7 @@ export default definePlugin({
         const goodsId = item.goods_id ?? 0;
         try {
           const r = await pool.query<{ rows: Array<{ content: string | null }> }>(
-            `SELECT content FROM dc_goods_service
+            `SELECT content FROM gq_goods_service
              WHERE goods_id = $1 AND content IS NOT NULL
              ORDER BY id ASC LIMIT 1`,
             [goodsId],

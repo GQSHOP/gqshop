@@ -13,12 +13,12 @@ import {
 
 /**
  * 附件（媒体模型实际映射此表）
- * MySQL 原表：`dc_attachment`
+ * MySQL 原表：`gq_attachment`
  */
 export const attachmentTable = pgTable(
-  "dc_attachment",
+  "gq_attachment",
   {
-    aid: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_attachment_aid_seq" }),
+    aid: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_attachment_aid_seq" }),
     alias: varchar({ length: 64 }).default('').notNull(),
     author: integer().default(1).notNull(),
     sortid: integer().default(0).notNull(),
@@ -34,19 +34,19 @@ export const attachmentTable = pgTable(
     download_count: bigint({ mode: 'number' }).default(0).notNull(),
   },
   (t) => [
-    index("dc_attachment_thum_uid").on(t.thumfor, t.author),
-    index("dc_attachment_addtime").on(t.addtime),
+    index("gq_attachment_thum_uid").on(t.thumfor, t.author),
+    index("gq_attachment_addtime").on(t.addtime),
   ],
 );
 
 /**
  * 博客文章（EMLOG 血统 log）
- * MySQL 原表：`dc_blog`
+ * MySQL 原表：`gq_blog`
  */
 export const blogTable = pgTable(
-  "dc_blog",
+  "gq_blog",
   {
-    gid: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_blog_gid_seq" }),
+    gid: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_blog_gid_seq" }),
     title: varchar({ length: 255 }).default('').notNull(),
     date: bigint({ mode: 'number' }).notNull(),
     content: text().notNull(),
@@ -76,40 +76,40 @@ export const blogTable = pgTable(
     feedback: varchar({ length: 2048 }).default('').notNull(),
   },
   (t) => [
-    index("dc_blog_author").on(t.author),
-    index("dc_blog_views").on(t.views),
-    index("dc_blog_comnum").on(t.comnum),
-    index("dc_blog_sortid").on(t.sortid),
-    index("dc_blog_top").on(t.top, t.date),
-    index("dc_blog_date").on(t.date),
+    index("gq_blog_author").on(t.author),
+    index("gq_blog_views").on(t.views),
+    index("gq_blog_comnum").on(t.comnum),
+    index("gq_blog_sortid").on(t.sortid),
+    index("gq_blog_top").on(t.top, t.date),
+    index("gq_blog_date").on(t.date),
   ],
 );
 
 /**
  * 文章扩展字段
- * MySQL 原表：`dc_blog_fields`
+ * MySQL 原表：`gq_blog_fields`
  */
 export const blogFieldsTable = pgTable(
-  "dc_blog_fields",
+  "gq_blog_fields",
   {
-    id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity({ name: "dc_blog_fields_id_seq" }),
+    id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity({ name: "gq_blog_fields_id_seq" }),
     gid: bigint({ mode: 'number' }).default(0).notNull(),
     field_key: varchar({ length: 255 }).default(''),
     field_value: text(),
   },
   (t) => [
-    index("dc_blog_fields_gid").on(t.gid),
+    index("gq_blog_fields_gid").on(t.gid),
   ],
 );
 
 /**
  * 博客导航
- * MySQL 原表：`dc_blog_navi`
+ * MySQL 原表：`gq_blog_navi`
  */
 export const blogNaviTable = pgTable(
-  "dc_blog_navi",
+  "gq_blog_navi",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_blog_navi_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_blog_navi_id_seq" }),
     naviname: varchar({ length: 255 }).default('').notNull(),
     url: varchar({ length: 512 }).default('').notNull(),
     newtab: char({ length: 1 }).default('n').notNull(),
@@ -125,12 +125,12 @@ export const blogNaviTable = pgTable(
 
 /**
  * 评论
- * MySQL 原表：`dc_comment`
+ * MySQL 原表：`gq_comment`
  */
 export const commentTable = pgTable(
-  "dc_comment",
+  "gq_comment",
   {
-    cid: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_comment_cid_seq" }),
+    cid: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_comment_cid_seq" }),
     gid: integer().default(0).notNull(),
     pid: integer().default(0).notNull(),
     // enum: n|y
@@ -147,20 +147,20 @@ export const commentTable = pgTable(
     date: bigint({ mode: 'number' }).notNull(),
   },
   (t) => [
-    index("dc_comment_gid").on(t.gid),
-    index("dc_comment_date").on(t.date),
-    index("dc_comment_hide").on(t.hide),
+    index("gq_comment_gid").on(t.gid),
+    index("gq_comment_date").on(t.date),
+    index("gq_comment_hide").on(t.hide),
   ],
 );
 
 /**
  * 友情链接
- * MySQL 原表：`dc_link`
+ * MySQL 原表：`gq_link`
  */
 export const linkTable = pgTable(
-  "dc_link",
+  "gq_link",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_link_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_link_id_seq" }),
     sitename: varchar({ length: 255 }).default('').notNull(),
     siteurl: varchar({ length: 255 }).default('').notNull(),
     icon: varchar({ length: 512 }).default('').notNull(),
@@ -173,24 +173,24 @@ export const linkTable = pgTable(
 
 /**
  * 媒体/资源分类
- * MySQL 原表：`dc_media_sort`
+ * MySQL 原表：`gq_media_sort`
  */
 export const mediaSortTable = pgTable(
-  "dc_media_sort",
+  "gq_media_sort",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_media_sort_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_media_sort_id_seq" }),
     sortname: varchar({ length: 255 }).default('').notNull(),
   },
 );
 
 /**
  * 页面导航
- * MySQL 原表：`dc_navi`
+ * MySQL 原表：`gq_navi`
  */
 export const naviTable = pgTable(
-  "dc_navi",
+  "gq_navi",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_navi_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_navi_id_seq" }),
     naviname: varchar({ length: 30 }).default('').notNull(),
     url: varchar({ length: 512 }).default('').notNull(),
     // enum: n|y
@@ -209,12 +209,12 @@ export const naviTable = pgTable(
 
 /**
  * 微语（说说）
- * MySQL 原表：`dc_twitter`
+ * MySQL 原表：`gq_twitter`
  */
 export const twitterTable = pgTable(
-  "dc_twitter",
+  "gq_twitter",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_twitter_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_twitter_id_seq" }),
     content: text().notNull(),
     img: varchar({ length: 255 }),
     author: integer().default(1).notNull(),
@@ -224,6 +224,6 @@ export const twitterTable = pgTable(
     private: varchar({ length: 1 }).default('n').notNull(),
   },
   (t) => [
-    index("dc_twitter_author").on(t.author),
+    index("gq_twitter_author").on(t.author),
   ],
 );

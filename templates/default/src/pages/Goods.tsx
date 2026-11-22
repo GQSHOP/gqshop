@@ -126,15 +126,15 @@ export default function GoodsDetailPage() {
               <div className="goods-cover-main" id="goodsCoverMain">
                 <img
                   className="goods-cover-img"
-                  src={goods.cover || "/dcskin/img/cover.svg"}
+                  src={goods.cover || "/gqskin/img/cover.svg"}
                   alt={goods.title}
-                  data-dc-image-loaded
+                  data-gq-image-loaded
                 />
               </div>
               <div className="goods-swiper" id="goodsSwiper">
                 <div className="goods-swiper-track" id="goodsSwiperTrack">
                   <div className="goods-swiper-slide">
-                    <img src={goods.cover || "/dcskin/img/cover.svg"} alt={goods.title} loading="lazy" />
+                    <img src={goods.cover || "/gqskin/img/cover.svg"} alt={goods.title} loading="lazy" />
                   </div>
                 </div>
                 <span className="goods-swiper-counter" id="goodsSwiperCounter">1/1</span>

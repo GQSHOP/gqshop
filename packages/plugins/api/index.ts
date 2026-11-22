@@ -9,12 +9,26 @@
 export interface HookMap {
   "core:init": Record<string, never>;
   "order:created": { orderId: number; outTradeNo: string; userId: number; amountCents: number };
-  "pay:settled": { orderId: number; gateway: string; amountCents: number };
+  /** R2-β：结算完成事件——members/station/content 域订阅执行后置资金动作；
+   *  executor=结算方事务连接（域内入账与其同生共死，保持原子性） */
+  "pay:settled": {
+    orderId: number;
+    gateway: string;
+    amountCents: number;
+    outTradeNo?: string;
+    buyerUid?: number;
+    costCents?: number;
+    stationId?: number;
+    stationOwnerUid?: number;
+    executor?: QueryExecutor;
+  };
   "deliver:after": { orderId: number; goodsType: string; contents: string[] };
   "deliver:failed": { orderId: number; goodsType: string; error: string };
   "stock:low": { goodsId: number; stock: number };
   "user:registered": { uid: number; superior: number };
   "aftersale:created": { aftersaleId: number; orderId: number };
+  /** R2-β：退款类售后结单（members 域订阅执行佣金反扣；executor 同结算事务） */
+  "aftersale:refunded": { orderNo: string; executor?: QueryExecutor };
   "station:opened": { stationId: number; uid: number };
   "withdraw:reviewed": { withdrawId: number; uid: number; approved: boolean };
 }
@@ -55,7 +69,7 @@ export class PluginBus {
 
 /** 商品类型注册项：deliver 分发 handler（对齐原 deliver.ts switch 分支语义）。 */
 export interface GoodsTypeEntry {
-  /** dc_goods.type 值，如 goods_once */
+  /** gq_goods.type 值，如 goods_once */
   type: string;
   label: string;
   /** 发货：返回 delivered=false 表示待人工/失败（不抛异常语义与 A2 一致） */
@@ -84,10 +98,17 @@ export interface OrderItemRef {
 
 // ============ PluginContext（最小 API 面） ============
 
+/** 插件自定义路由（M6-γ：支付通道回调/跳转页等；handler 为 Hono Handler 结构类型）。 */
+export interface PluginRoute {
+  method: "GET" | "POST" | "ALL";
+  path: string;
+  handler: (c: never) => Promise<Response> | Response;
+}
+
 export interface PluginContext {
   bus: PluginBus;
   log: (msg: string) => void;
-  /** dc_options 受控读写 */
+  /** gq_options 受控读写 */
   options: {
     get: (name: string) => Promise<string | null>;
     set: (name: string, value: string) => Promise<void>;
@@ -95,6 +116,8 @@ export interface PluginContext {
   /** 注册表（幂等；deactivate 时宿主自动摘除） */
   registerGoodsType: (entry: GoodsTypeEntry) => void;
   registerPayPlugin: (entry: PayPluginEntry) => void;
+  /** 自定义 HTTP 路由（M6-γ）：装配期由 core 挂载；path 须以 / 开头 */
+  registerRoute: (route: PluginRoute) => void;
   /** 受控 SQL 执行器（同事务/池由宿主在调用点传入，插件不持有长连接） */
   query: QueryExecutor;
 }

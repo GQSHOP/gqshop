@@ -13,30 +13,30 @@ import {
 
 /**
  * 后台用户组权限
- * MySQL 原表：`dc_admin_group`
+ * MySQL 原表：`gq_admin_group`
  */
 export const adminGroupTable = pgTable(
-  "dc_admin_group",
+  "gq_admin_group",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_admin_group_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_admin_group_id_seq" }),
     name: varchar({ length: 60 }).default('').notNull(),
     menu_permissions: text(),
     create_time: integer().default(0).notNull(),
     update_time: integer().default(0).notNull(),
   },
   (t) => [
-    index("dc_admin_group_idx_name").on(t.name),
+    index("gq_admin_group_idx_name").on(t.name),
   ],
 );
 
 /**
  * 余额流水
- * MySQL 原表：`dc_balance_log`
+ * MySQL 原表：`gq_balance_log`
  */
 export const balanceLogTable = pgTable(
-  "dc_balance_log",
+  "gq_balance_log",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_balance_log_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_balance_log_id_seq" }),
     user_id: integer(),
     plus: varchar({ length: 5 }),
     update_before: numeric({ precision: 10, scale: 2 }),
@@ -48,30 +48,30 @@ export const balanceLogTable = pgTable(
 
 /**
  * 免费领取记录
- * MySQL 原表：`dc_free_claim_log`
+ * MySQL 原表：`gq_free_claim_log`
  */
 export const freeClaimLogTable = pgTable(
-  "dc_free_claim_log",
+  "gq_free_claim_log",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_free_claim_log_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_free_claim_log_id_seq" }),
     ip: varchar({ length: 50 }).notNull(),
     goods_id: integer().default(0).notNull(),
     order_id: integer().default(0).notNull(),
     claim_time: bigint({ mode: 'number' }),
   },
   (t) => [
-    index("dc_free_claim_log_idx_ip_time").on(t.ip, t.claim_time),
+    index("gq_free_claim_log_idx_ip_time").on(t.ip, t.claim_time),
   ],
 );
 
 /**
  * 等级/分店套餐购买订单（会员等级与分店开通共用）
- * MySQL 原表：`dc_level_order`
+ * MySQL 原表：`gq_level_order`
  */
 export const levelOrderTable = pgTable(
-  "dc_level_order",
+  "gq_level_order",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_level_order_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_level_order_id_seq" }),
     order_id: integer().default(0).notNull(),
     out_trade_no: varchar({ length: 32 }).default('').notNull(),
     user_id: integer().default(0).notNull(),
@@ -88,20 +88,20 @@ export const levelOrderTable = pgTable(
     complete_time: bigint({ mode: 'number' }),
   },
   (t) => [
-    index("dc_level_order_out_trade_no").on(t.out_trade_no),
-    index("dc_level_order_user_id").on(t.user_id),
-    index("dc_level_order_state").on(t.state),
+    index("gq_level_order_out_trade_no").on(t.out_trade_no),
+    index("gq_level_order_user_id").on(t.user_id),
+    index("gq_level_order_state").on(t.state),
   ],
 );
 
 /**
  * 会员等级定义（8 档默认种子）
- * MySQL 原表：`dc_member`
+ * MySQL 原表：`gq_member`
  */
 export const memberTable = pgTable(
-  "dc_member",
+  "gq_member",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_member_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_member_id_seq" }),
     name: varchar({ length: 255 }).notNull(),
     icon: varchar({ length: 100 }).default('ri-vip-diamond-line').notNull(),
     icon_image: varchar({ length: 255 }).default('').notNull(),
@@ -128,10 +128,10 @@ export const memberTable = pgTable(
 
 /**
  * 商品×会员等级价格覆盖
- * MySQL 原表：`dc_member_price`
+ * MySQL 原表：`gq_member_price`
  */
 export const memberPriceTable = pgTable(
-  "dc_member_price",
+  "gq_member_price",
   {
     goods_id: integer().notNull(),
     sku: varchar({ length: 50 }).default('0').notNull(),
@@ -139,18 +139,18 @@ export const memberPriceTable = pgTable(
     price: bigint({ mode: 'number' }).notNull(),
   },
   (t) => [
-    index("dc_member_price_idx_goods_sku_level").on(t.goods_id, t.sku, t.member_level),
+    index("gq_member_price_idx_goods_sku_level").on(t.goods_id, t.sku, t.member_level),
   ],
 );
 
 /**
  * 充值卡密
- * MySQL 原表：`dc_recharge_card`
+ * MySQL 原表：`gq_recharge_card`
  */
 export const rechargeCardTable = pgTable(
-  "dc_recharge_card",
+  "gq_recharge_card",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_recharge_card_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_recharge_card_id_seq" }),
     type: varchar({ length: 50 }).default('').notNull(),
     title: varchar({ length: 100 }).default('').notNull(),
     amount: numeric({ precision: 10, scale: 2 }).default('0.00').notNull(),
@@ -164,22 +164,22 @@ export const rechargeCardTable = pgTable(
     update_time: bigint({ mode: 'number' }).default(0).notNull(),
   },
   (t) => [
-    uniqueIndex("dc_recharge_card_uniq_card_key").on(t.card_key),
-    index("dc_recharge_card_idx_status").on(t.status),
-    index("dc_recharge_card_idx_batch_no").on(t.batch_no),
-    index("dc_recharge_card_idx_admin_uid").on(t.admin_uid),
-    index("dc_recharge_card_idx_user_id").on(t.user_id),
+    uniqueIndex("gq_recharge_card_uniq_card_key").on(t.card_key),
+    index("gq_recharge_card_idx_status").on(t.status),
+    index("gq_recharge_card_idx_batch_no").on(t.batch_no),
+    index("gq_recharge_card_idx_admin_uid").on(t.admin_uid),
+    index("gq_recharge_card_idx_user_id").on(t.user_id),
   ],
 );
 
 /**
  * 用户主表：余额/等级/角色/邀请码/上级/各开放平台 openid/api_key
- * MySQL 原表：`dc_user`
+ * MySQL 原表：`gq_user`
  */
 export const userTable = pgTable(
-  "dc_user",
+  "gq_user",
   {
-    uid: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_user_uid_seq" }),
+    uid: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_user_uid_seq" }),
     station_id: integer().default(0).notNull(),
     expend: numeric({ precision: 10, scale: 2 }).default('0.00'),
     username: varchar({ length: 32 }).default('').notNull(),
@@ -225,23 +225,23 @@ export const userTable = pgTable(
     api_whitelist_enabled: smallint().default(0).notNull(),
   },
   (t) => [
-    index("dc_user_username").on(t.username),
-    index("dc_user_email").on(t.email),
-    index("dc_user_idx_superior").on(t.superior),
-    index("dc_user_idx_qq_openid").on(t.qq_openid),
-    index("dc_user_idx_wechat_openid").on(t.wechat_openid),
-    index("dc_user_idx_wechat_unionid").on(t.wechat_unionid),
+    index("gq_user_username").on(t.username),
+    index("gq_user_email").on(t.email),
+    index("gq_user_idx_superior").on(t.superior),
+    index("gq_user_idx_qq_openid").on(t.qq_openid),
+    index("gq_user_idx_wechat_openid").on(t.wechat_openid),
+    index("gq_user_idx_wechat_unionid").on(t.wechat_unionid),
   ],
 );
 
 /**
  * 商品访问足迹
- * MySQL 原表：`dc_user_goods_footprint`
+ * MySQL 原表：`gq_user_goods_footprint`
  */
 export const userGoodsFootprintTable = pgTable(
-  "dc_user_goods_footprint",
+  "gq_user_goods_footprint",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_user_goods_footprint_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_user_goods_footprint_id_seq" }),
     user_id: integer().default(0).notNull(),
     goods_id: integer().default(0).notNull(),
     station_id: integer().default(0).notNull(),
@@ -250,20 +250,20 @@ export const userGoodsFootprintTable = pgTable(
     last_view_time: integer().default(0).notNull(),
   },
   (t) => [
-    uniqueIndex("dc_user_goods_footprint_uniq_user_goods_station").on(t.user_id, t.goods_id, t.station_id),
-    index("dc_user_goods_footprint_idx_user_last").on(t.user_id, t.last_view_time),
-    index("dc_user_goods_footprint_idx_goods").on(t.goods_id),
+    uniqueIndex("gq_user_goods_footprint_uniq_user_goods_station").on(t.user_id, t.goods_id, t.station_id),
+    index("gq_user_goods_footprint_idx_user_last").on(t.user_id, t.last_view_time),
+    index("gq_user_goods_footprint_idx_goods").on(t.goods_id),
   ],
 );
 
 /**
  * 用户操作日志
- * MySQL 原表：`dc_user_log`
+ * MySQL 原表：`gq_user_log`
  */
 export const userLogTable = pgTable(
-  "dc_user_log",
+  "gq_user_log",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_user_log_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_user_log_id_seq" }),
     uid: integer().default(0).notNull(),
     type: varchar({ length: 50 }).default('').notNull(),
     amount: numeric({ precision: 12, scale: 2 }).default('0.00').notNull(),
@@ -272,20 +272,20 @@ export const userLogTable = pgTable(
     create_time: integer().default(0).notNull(),
   },
   (t) => [
-    index("dc_user_log_idx_uid").on(t.uid),
-    index("dc_user_log_idx_type").on(t.type),
-    index("dc_user_log_idx_create_time").on(t.create_time),
+    index("gq_user_log_idx_uid").on(t.uid),
+    index("gq_user_log_idx_type").on(t.type),
+    index("gq_user_log_idx_create_time").on(t.create_time),
   ],
 );
 
 /**
  * 提现申请与审核
- * MySQL 原表：`dc_withdraw`
+ * MySQL 原表：`gq_withdraw`
  */
 export const withdrawTable = pgTable(
-  "dc_withdraw",
+  "gq_withdraw",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_withdraw_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_withdraw_id_seq" }),
     user_id: integer(),
     amount: numeric({ precision: 10, scale: 2 }),
     method: varchar({ length: 50 }),

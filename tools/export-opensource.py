@@ -12,10 +12,10 @@
   - docker-compose.server.yml（服务器专用编排，含内网拓扑语义）
   - README.md（私有开发视角；公开仓库维护自己的产品 README）
   - .github/ISSUE_TEMPLATE（内部协作约定）
-  - templates/default/src/dcskin/（对标皮肤资产，2026-11-22 起剥离出公开版，私有仓库保留）
-  - templates/default/public/dcskin/img/（对标品牌图）
-  - templates/default/src/dcskin-patch.css（皮肤补丁，仅私有版有意义）
-导出会对公开版 templates/default/src/main.tsx 剥离 dcskin 相关 import（防 build 断链）；
+  - templates/default/src/gqskin/（皮肤资产，2026-11-22 起剥离出公开版，私有仓库保留）
+  - templates/default/public/gqskin/img/（品牌图）
+  - templates/default/src/gqskin-patch.css（皮肤补丁，仅私有版有意义）
+导出会对公开版 templates/default/src/main.tsx 剥离 gqskin 相关 import（防 build 断链）；
 公开版 default 模板=无皮肤但可运行，自研样式见 templates/minimal。
 导出会在公开仓库生成 MIRROR.md（镜像来源 commit 说明）。
 """
@@ -30,8 +30,8 @@ import tempfile
 REPO = os.path.dirname(os.path.abspath(__file__)) or r"E:\GQSHOP\gqshop-monorepo"
 REPO = os.path.dirname(REPO)
 PUBLIC_DEFAULT = r"E:\GQSHOP\gqshop-public"
-EXCLUDE_FILES = {"docker-compose.server.yml", "README.md", "templates/default/src/dcskin-patch.css"}
-EXCLUDE_DIRS = {".github/ISSUE_TEMPLATE", "templates/default/src/dcskin", "templates/default/public/dcskin/img"}
+EXCLUDE_FILES = {"docker-compose.server.yml", "README.md", "templates/default/src/gqskin-patch.css"}
+EXCLUDE_DIRS = {".github/ISSUE_TEMPLATE", "templates/default/src/gqskin", "templates/default/public/gqskin/img"}
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--public-dir", default=PUBLIC_DEFAULT)
@@ -59,11 +59,11 @@ for f in EXCLUDE_FILES:
     if os.path.isfile(p):
         os.remove(p)
 
-# 2.5 公开版补丁：default 模板剥离对标皮肤 import（dcskin 已排除，保留 vendor 基础库）
+# 2.5 公开版补丁：default 模板剥离对标皮肤 import（gqskin 已排除，保留 vendor 基础库）
 main_tsx = os.path.join(tmp, "templates", "default", "src", "main.tsx")
 if os.path.isfile(main_tsx):
     src = io.open(main_tsx, encoding="utf-8").read()
-    kept = [ln for ln in src.splitlines() if "dcskin" not in ln]
+    kept = [ln for ln in src.splitlines() if "gqskin" not in ln and "dcskin" not in ln]
     io.open(main_tsx, "w", encoding="utf-8", newline="\n").write("\n".join(kept) + "\n")
 
 # 3. 镜像到公开仓库工作区（保留公开仓自身的门面文件）

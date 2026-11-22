@@ -1,0 +1,32 @@
+{
+  "name": "@gqshop/kernel",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "@gqshop/kernel (ADR-010 R2)",
+  "main": "index.ts",
+  "types": "index.ts",
+  "dependencies": {
+    "@gqshop/db": "workspace:*",
+    "@gqshop/plugin-api": "workspace:*",
+    "@gqshop/plugin-goods-once": "workspace:*",
+    "@gqshop/plugin-goods-general": "workspace:*",
+    "@gqshop/plugin-goods-service": "workspace:*",
+    "@gqshop/plugin-pay-epay": "workspace:*",
+    "@gqshop/plugin-pay-balance": "workspace:*",
+    "hono": "^4.9.0",
+    "pg": "^8.16.0",
+    "bcryptjs": "^3.0.2",
+    "drizzle-orm": "^0.44.2",
+    "adm-zip": "^0.5.16"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.0",
+    "typescript": "^5.8.0",
+    "@types/adm-zip": "^0.5.7"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "echo no tests yet"
+  }
+}

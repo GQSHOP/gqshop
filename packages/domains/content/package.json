@@ -1,0 +1,25 @@
+{
+  "name": "@gqshop/domain-content",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "@gqshop/domain-content (ADR-010 R2)",
+  "main": "index.ts",
+  "types": "index.ts",
+  "dependencies": {
+    "@gqshop/kernel": "workspace:*",
+    "@gqshop/db": "workspace:*",
+    "hono": "^4.9.0",
+    "pg": "^8.16.0",
+    "drizzle-orm": "^0.44.2",
+    "@gqshop/plugin-api": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.0",
+    "typescript": "^5.8.0"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "echo no tests yet"
+  }
+}

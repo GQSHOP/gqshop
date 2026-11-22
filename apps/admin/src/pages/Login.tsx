@@ -9,7 +9,7 @@ const FEATURES: Array<[string, string, string]> = [
   ["多分站协同", "权限、策略、结算分居下发", "ri-community-line"],
 ];
 
-/** 后台登录：账号密码（dc_user role=admin）换取管理密钥。视觉对标 MKSHOP admin-ui 双栏式。 */
+/** 后台登录：账号密码（gq_user role=admin）换取管理密钥。视觉对标 MKSHOP admin-ui 双栏式。 */
 export default function Login() {
   const navigate = useNavigate();
   const [username, setUsername] = useState("");

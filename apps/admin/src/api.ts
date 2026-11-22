@@ -304,3 +304,27 @@ export interface PluginsView {
 export const getPlugins = () => call<PluginsView>("/admin/plugins");
 export const togglePlugin = (name: string) =>
   call<{ msg: string; active_plugins: string[] }>(`/admin/plugins/${name}/toggle`, { method: "POST" });
+
+// ---------- M6-α 应用市场（plugin.manage） ----------
+export interface MarketEntryRow {
+  name: string;
+  version: string;
+  description: string;
+  sha256: string;
+  size: number;
+  date: string;
+}
+export interface MarketView {
+  available: boolean;
+  index: MarketEntryRow[];
+  installed: Array<{ name: string; version: string; installedAt: number }>;
+  upgradable: Array<{ name: string; from: string; to: string }>;
+  localVersions?: Record<string, string[]>;
+}
+export const getMarket = () => call<MarketView>("/admin/market");
+export const marketInstall = (name: string, version?: string) =>
+  call<{ msg: string }>(`/admin/market/install`, { method: "POST", body: JSON.stringify({ name, version }) });
+export const marketRollback = (name: string, version: string) =>
+  call<{ msg: string }>(`/admin/market/rollback`, { method: "POST", body: JSON.stringify({ name, version }) });
+export const marketUninstall = (name: string) =>
+  call<{ msg: string }>(`/admin/market/uninstall`, { method: "POST", body: JSON.stringify({ name }) });

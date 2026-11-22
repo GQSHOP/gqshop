@@ -4,10 +4,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { epayTypeFromPlugin } from "../src/lib/epay.js";
-import { centsToYuan } from "../src/lib/trade.js";
-import { MEMBER_SEEDS } from "../src/memberships.js";
-import { applyBestDiscount } from "../src/m2-final.js";
+import { epayTypeFromPlugin } from "@gqshop/kernel";
+import { centsToYuan } from "@gqshop/kernel";
+import { MEMBER_SEEDS } from "@gqshop/domain-members";
+import { applyBestDiscount } from "@gqshop/domain-trade";
 
 describe("支付通道映射", () => {
   it("epay_ali→alipay / epay_wx→wxpay / 其他→null", () => {

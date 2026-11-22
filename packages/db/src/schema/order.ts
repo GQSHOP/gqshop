@@ -13,12 +13,12 @@ import {
 
 /**
  * 售后单
- * MySQL 原表：`dc_aftersale`
+ * MySQL 原表：`gq_aftersale`
  */
 export const aftersaleTable = pgTable(
-  "dc_aftersale",
+  "gq_aftersale",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_aftersale_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_aftersale_id_seq" }),
     order_id: integer().default(0).notNull(),
     order_list_id: integer().default(0).notNull(),
     out_trade_no: varchar({ length: 64 }).default('').notNull(),
@@ -36,20 +36,20 @@ export const aftersaleTable = pgTable(
     reopen_time: integer(),
   },
   (t) => [
-    index("dc_aftersale_idx_order_id").on(t.order_id),
-    index("dc_aftersale_idx_out_trade_no").on(t.out_trade_no),
-    index("dc_aftersale_idx_status").on(t.status),
+    index("gq_aftersale_idx_order_id").on(t.order_id),
+    index("gq_aftersale_idx_out_trade_no").on(t.out_trade_no),
+    index("gq_aftersale_idx_status").on(t.status),
   ],
 );
 
 /**
  * 售后沟通记录
- * MySQL 原表：`dc_aftersale_chat`
+ * MySQL 原表：`gq_aftersale_chat`
  */
 export const aftersaleChatTable = pgTable(
-  "dc_aftersale_chat",
+  "gq_aftersale_chat",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_aftersale_chat_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_aftersale_chat_id_seq" }),
     aftersale_id: integer().default(0).notNull(),
     order_id: integer().default(0).notNull(),
     order_list_id: integer().default(0).notNull(),
@@ -60,19 +60,19 @@ export const aftersaleChatTable = pgTable(
     create_time: integer().default(0).notNull(),
   },
   (t) => [
-    index("dc_aftersale_chat_idx_aftersale_id").on(t.aftersale_id),
-    index("dc_aftersale_chat_idx_order_id").on(t.order_id),
+    index("gq_aftersale_chat_idx_aftersale_id").on(t.aftersale_id),
+    index("gq_aftersale_chat_idx_order_id").on(t.order_id),
   ],
 );
 
 /**
  * 购物车
- * MySQL 原表：`dc_cart`
+ * MySQL 原表：`gq_cart`
  */
 export const cartTable = pgTable(
-  "dc_cart",
+  "gq_cart",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_cart_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_cart_id_seq" }),
     is_local: smallint().default(0),
     eb_local: varchar({ length: 32 }),
     user_id: integer(),
@@ -86,12 +86,12 @@ export const cartTable = pgTable(
 
 /**
  * 优惠券
- * MySQL 原表：`dc_coupon`
+ * MySQL 原表：`gq_coupon`
  */
 export const couponTable = pgTable(
-  "dc_coupon",
+  "gq_coupon",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_coupon_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_coupon_id_seq" }),
     name: varchar({ length: 100 }).notNull(),
     code: varchar({ length: 50 }).notNull(),
     type: smallint().default(1).notNull(),
@@ -113,19 +113,19 @@ export const couponTable = pgTable(
     create_time: integer().notNull(),
   },
   (t) => [
-    uniqueIndex("dc_coupon_code").on(t.code),
-    index("dc_coupon_status").on(t.status),
+    uniqueIndex("gq_coupon_code").on(t.code),
+    index("gq_coupon_status").on(t.status),
   ],
 );
 
 /**
  * 优惠券使用记录
- * MySQL 原表：`dc_coupon_log`
+ * MySQL 原表：`gq_coupon_log`
  */
 export const couponLogTable = pgTable(
-  "dc_coupon_log",
+  "gq_coupon_log",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_coupon_log_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_coupon_log_id_seq" }),
     coupon_id: integer().notNull(),
     user_id: integer().default(0).notNull(),
     order_id: integer(),
@@ -135,20 +135,20 @@ export const couponLogTable = pgTable(
     create_time: integer().notNull(),
   },
   (t) => [
-    index("dc_coupon_log_coupon_id").on(t.coupon_id),
-    index("dc_coupon_log_user_id").on(t.user_id),
-    index("dc_coupon_log_order_id").on(t.order_id),
+    index("gq_coupon_log_coupon_id").on(t.coupon_id),
+    index("gq_coupon_log_user_id").on(t.user_id),
+    index("gq_coupon_log_order_id").on(t.order_id),
   ],
 );
 
 /**
  * 交付记录（发货内容留痕，交付回收对应）
- * MySQL 原表：`dc_deliver`
+ * MySQL 原表：`gq_deliver`
  */
 export const deliverTable = pgTable(
-  "dc_deliver",
+  "gq_deliver",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_deliver_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_deliver_id_seq" }),
     order_id: integer(),
     order_list_id: integer(),
     content: text(),
@@ -156,16 +156,16 @@ export const deliverTable = pgTable(
     delete_time: bigint({ mode: 'number' }),
   },
   (t) => [
-    index("dc_deliver_idx_deliver_order_list").on(t.order_list_id, t.delete_time),
+    index("gq_deliver_idx_deliver_order_list").on(t.order_list_id, t.delete_time),
   ],
 );
 
 /**
  * 批量优惠（数量减免/订单减免/订单折扣）
- * MySQL 原表：`dc_discount`
+ * MySQL 原表：`gq_discount`
  */
 export const discountTable = pgTable(
-  "dc_discount",
+  "gq_discount",
   {
     goods_id: integer().notNull(),
     sku: varchar({ length: 100 }).default('0').notNull(),
@@ -173,21 +173,21 @@ export const discountTable = pgTable(
     amount: numeric({ precision: 10, scale: 2 }),
     type: smallint().default(1).notNull(),
     // M2: surrogate pk for admin row ops
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_discount_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_discount_id_seq" }),
   },
   (t) => [
-    index("dc_discount_goods").on(t.goods_id, t.sku),
+    index("gq_discount_goods").on(t.goods_id, t.sku),
   ],
 );
 
 /**
  * 订单主表（out_trade_no/支付插件/双状态字段）
- * MySQL 原表：`dc_order`
+ * MySQL 原表：`gq_order`
  */
 export const orderTable = pgTable(
-  "dc_order",
+  "gq_order",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_order_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_order_id_seq" }),
     station_id: integer().default(0).notNull(),
     client_ip: varchar({ length: 80 }),
     user_id: integer().default(0),
@@ -220,19 +220,19 @@ export const orderTable = pgTable(
     idempotency_key: varchar({ length: 64 }),
   },
   (t) => [
-    uniqueIndex("dc_order_out_trade_no").on(t.out_trade_no),
-    uniqueIndex("dc_order_idempotency_key").on(t.idempotency_key),
+    uniqueIndex("gq_order_out_trade_no").on(t.out_trade_no),
+    uniqueIndex("gq_order_idempotency_key").on(t.idempotency_key),
   ],
 );
 
 /**
  * 订单子项（商品/SKU/数量/发货内容）
- * MySQL 原表：`dc_order_list`
+ * MySQL 原表：`gq_order_list`
  */
 export const orderListTable = pgTable(
-  "dc_order_list",
+  "gq_order_list",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_order_list_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_order_list_id_seq" }),
     order_id: integer(),
     goods_id: integer(),
     sku: varchar({ length: 100 }),
@@ -245,16 +245,16 @@ export const orderListTable = pgTable(
     cost_price: integer().default(0),
   },
   (t) => [
-    index("dc_order_list_order_id").on(t.order_id),
+    index("gq_order_list_order_id").on(t.order_id),
   ],
 );
 
 /**
  * 下单必填字段（商品级）
- * MySQL 原表：`dc_order_required`
+ * MySQL 原表：`gq_order_required`
  */
 export const orderRequiredTable = pgTable(
-  "dc_order_required",
+  "gq_order_required",
   {
     order_id: integer().notNull(),
     name: varchar({ length: 80 }),
@@ -262,18 +262,18 @@ export const orderRequiredTable = pgTable(
     content: varchar({ length: 50 }),
   },
   (t) => [
-    index("dc_order_required_order_id").on(t.order_id),
+    index("gq_order_required_order_id").on(t.order_id),
   ],
 );
 
 /**
  * 支付回调原始日志（全量审计）
- * MySQL 原表：`dc_pay_callback_log`
+ * MySQL 原表：`gq_pay_callback_log`
  */
 export const payCallbackLogTable = pgTable(
-  "dc_pay_callback_log",
+  "gq_pay_callback_log",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_pay_callback_log_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_pay_callback_log_id_seq" }),
     gateway: varchar({ length: 64 }).default('').notNull(),
     order_no: varchar({ length: 64 }).default('').notNull(),
     amount: varchar({ length: 32 }).default('').notNull(),
@@ -283,19 +283,19 @@ export const payCallbackLogTable = pgTable(
     create_time: integer().default(0).notNull(),
   },
   (t) => [
-    index("dc_pay_callback_log_idx_order_no").on(t.order_no),
-    index("dc_pay_callback_log_idx_create_time").on(t.create_time),
+    index("gq_pay_callback_log_idx_order_no").on(t.order_no),
+    index("gq_pay_callback_log_idx_create_time").on(t.create_time),
   ],
 );
 
 /**
  * 成本区间利润规则
- * MySQL 原表：`dc_profit_rule`
+ * MySQL 原表：`gq_profit_rule`
  */
 export const profitRuleTable = pgTable(
-  "dc_profit_rule",
+  "gq_profit_rule",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_profit_rule_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_profit_rule_id_seq" }),
     name: varchar({ length: 100 }).default('').notNull(),
     rules: text(),
     state: smallint().default(1).notNull(),
@@ -306,12 +306,12 @@ export const profitRuleTable = pgTable(
 
 /**
  * 单品加价规则
- * MySQL 原表：`dc_single_rule`
+ * MySQL 原表：`gq_single_rule`
  */
 export const singleRuleTable = pgTable(
-  "dc_single_rule",
+  "gq_single_rule",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_single_rule_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_single_rule_id_seq" }),
     name: varchar({ length: 100 }).default('').notNull(),
     type: smallint().default(1).notNull(),
     rules: text(),

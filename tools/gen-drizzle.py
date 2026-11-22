@@ -5,7 +5,7 @@
   int -> integer, varchar(n) -> varchar(n), bigint -> bigint(number mode),
   text/mediumtext/longtext -> text, tinyint -> smallint, decimal(m,n) -> numeric(m,n),
   enum('a','b') -> varchar(len=max) + comment note, char(n) -> char(n).
-AUTO_INCREMENT -> identity column. Table/column names keep snake_case + dc_ prefix.
+AUTO_INCREMENT -> identity column. Table names keep snake_case; PREFIX_MAP maps upstream dc_ -> gq_ (ADR-010 R1).
 
 Usage: python -I tools/gen-drizzle.py <path-to-install.sql>
 Output: packages/db/src/schema/*.ts
@@ -20,6 +20,9 @@ SQL = sys.argv[1] if len(sys.argv) > 1 else ""
 if not SQL:
     sys.exit("usage: python -I tools/gen-drizzle.py <path-to-install.sql>")
 OUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "packages", "db", "src", "schema")
+# ADR-010 R1: 输出表名前缀（上游 dc_ 映射为 gq_，命名自主）
+def OUT_TABLE(name):
+    return name[3:] if name.startswith("dc_") else name
 
 DOMAINS = ["user", "goods", "order", "station", "docking", "physical", "content", "system"]
 DOMAIN_MAP = {

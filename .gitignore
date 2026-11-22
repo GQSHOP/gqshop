@@ -32,3 +32,8 @@ Thumbs.db
 .playwright-cli/
 /gqshop_final_*.png
 /gqshop_m4final_*.png
+
+# 市场签名密钥（本地保管，绝不入库）
+.market-e2e/
+.market-keys/
+*.pem

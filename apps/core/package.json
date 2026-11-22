@@ -24,7 +24,13 @@
     "@gqshop/plugin-goods-general": "workspace:*",
     "@gqshop/plugin-goods-service": "workspace:*",
     "@gqshop/plugin-pay-epay": "workspace:*",
-    "@gqshop/plugin-pay-balance": "workspace:*"
+    "@gqshop/plugin-pay-balance": "workspace:*",
+    "@gqshop/kernel": "workspace:*",
+    "@gqshop/domain-trade": "workspace:*",
+    "@gqshop/domain-wallet": "workspace:*",
+    "@gqshop/domain-station": "workspace:*",
+    "@gqshop/domain-content": "workspace:*",
+    "@gqshop/domain-members": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

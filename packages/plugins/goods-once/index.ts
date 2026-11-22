@@ -8,10 +8,10 @@ async function claimOnceCard(
   orderListId: number,
 ): Promise<string | null> {
   const res = await pool.query<{ rows: Array<{ content: string | null }> }>(
-    `UPDATE dc_goods_once
+    `UPDATE gq_goods_once
      SET order_list_id = $1, sale_time = $2
      WHERE id = (
-       SELECT id FROM dc_goods_once
+       SELECT id FROM gq_goods_once
        WHERE goods_id = $3 AND sku = $4 AND order_list_id = 0
        ORDER BY id ASC
        FOR UPDATE SKIP LOCKED

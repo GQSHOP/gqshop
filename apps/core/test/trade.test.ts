@@ -4,7 +4,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { epaySign, epayVerify } from "../src/lib/epay.js";
+import { epaySign, epayVerify } from "@gqshop/kernel";
 import {
   canTransition,
   calcTotalCents,
@@ -12,8 +12,8 @@ import {
   genOutTradeNo,
   unitPriceCents,
   yuanToCents,
-} from "../src/lib/trade.js";
-import { t } from "../src/lib/i18n.js";
+} from "@gqshop/kernel";
+import { t } from "@gqshop/kernel";
 
 describe("epay MD5 协议", () => {
   it("签名按 key 排序、跳过空值与 sign/sign_type", () => {

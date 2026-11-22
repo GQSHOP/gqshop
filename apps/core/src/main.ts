@@ -9,12 +9,11 @@ import { resolve } from "node:path";
 import { createDbHandle, dbConfigFromEnv, runMigrations } from "@gqshop/db";
 
 import { createApp } from "./index.js";
-import { seedMemberships } from "./memberships.js";
-import { seedStationLevels } from "./station.js";
-import { seedAdminGroups } from "./admin-groups.js";
-import { loadPlugins } from "./lib/plugin-host.js";
-import { scanTemplates, serveTemplate } from "./lib/templates.js";
-import { startJobs } from "./jobs.js";
+import { seedAdminGroups, loadPlugins, scanTemplates, serveTemplate, bus } from "@gqshop/kernel";
+import { seedMemberships, registerDomainHooks as membersHooks } from "@gqshop/domain-members";
+import { seedStationLevels, registerDomainHooks as stationHooks } from "@gqshop/domain-station";
+import { startJobs } from "@gqshop/domain-trade";
+import { registerDomainHooks as contentHooks } from "@gqshop/domain-content";
 
 async function main(): Promise<void> {
   const { db, pool } = createDbHandle(dbConfigFromEnv());
@@ -30,7 +29,11 @@ async function main(): Promise<void> {
   await seedStationLevels(pool);
   await seedAdminGroups(pool);
   await loadPlugins(pool);
-  console.log("[gqshop-core] migrations applied + seeds + plugins loaded");
+  // R2-β：域事件订阅（pay:settled → 佣金/分成/实物单；aftersale:refunded → 反扣）
+  membersHooks(bus);
+  stationHooks(bus);
+  contentHooks(bus);
+  console.log("[gqshop-core] migrations applied + seeds + plugins + domain hooks loaded");
 
   const app = createApp(db, jwtSecret, pool, adminKey);
   const port = Number(process.env.GQSHOP_PORT ?? 8100);

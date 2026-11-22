@@ -13,12 +13,12 @@ import {
 
 /**
  * 收货地址
- * MySQL 原表：`dc_physical_address`
+ * MySQL 原表：`gq_physical_address`
  */
 export const physicalAddressTable = pgTable(
-  "dc_physical_address",
+  "gq_physical_address",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_physical_address_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_physical_address_id_seq" }),
     uid: integer().default(0).notNull(),
     receiver_name: varchar({ length: 100 }).default('').notNull(),
     receiver_phone: varchar({ length: 50 }).default('').notNull(),
@@ -29,16 +29,16 @@ export const physicalAddressTable = pgTable(
     update_time: bigint({ mode: 'number' }),
   },
   (t) => [
-    uniqueIndex("dc_physical_address_uniq_uid").on(t.uid),
+    uniqueIndex("gq_physical_address_uniq_uid").on(t.uid),
   ],
 );
 
 /**
  * 实物发货单
- * MySQL 原表：`dc_physical_goods_shipping`
+ * MySQL 原表：`gq_physical_goods_shipping`
  */
 export const physicalGoodsShippingTable = pgTable(
-  "dc_physical_goods_shipping",
+  "gq_physical_goods_shipping",
   {
     goods_id: integer().primaryKey(),
     template_id: integer().default(0).notNull(),
@@ -46,18 +46,18 @@ export const physicalGoodsShippingTable = pgTable(
     update_time: bigint({ mode: 'number' }),
   },
   (t) => [
-    index("dc_physical_goods_shipping_idx_template_id").on(t.template_id),
+    index("gq_physical_goods_shipping_idx_template_id").on(t.template_id),
   ],
 );
 
 /**
  * 实物销售记录
- * MySQL 原表：`dc_physical_sale`
+ * MySQL 原表：`gq_physical_sale`
  */
 export const physicalSaleTable = pgTable(
-  "dc_physical_sale",
+  "gq_physical_sale",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_physical_sale_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_physical_sale_id_seq" }),
     goods_id: integer().default(0).notNull(),
     order_list_id: integer().default(0).notNull(),
     sku: varchar({ length: 100 }).default('0').notNull(),
@@ -76,20 +76,20 @@ export const physicalSaleTable = pgTable(
     update_time: bigint({ mode: 'number' }),
   },
   (t) => [
-    uniqueIndex("dc_physical_sale_uniq_order_list").on(t.order_list_id),
-    index("dc_physical_sale_idx_goods_id").on(t.goods_id),
-    index("dc_physical_sale_idx_status").on(t.status),
+    uniqueIndex("gq_physical_sale_uniq_order_list").on(t.order_list_id),
+    index("gq_physical_sale_idx_goods_id").on(t.goods_id),
+    index("gq_physical_sale_idx_status").on(t.status),
   ],
 );
 
 /**
  * 运费模板
- * MySQL 原表：`dc_physical_shipping_template`
+ * MySQL 原表：`gq_physical_shipping_template`
  */
 export const physicalShippingTemplateTable = pgTable(
-  "dc_physical_shipping_template",
+  "gq_physical_shipping_template",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_physical_shipping_template_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_physical_shipping_template_id_seq" }),
     name: varchar({ length: 100 }).default('').notNull(),
     first_fee: integer().default(0).notNull(),
     append_fee: integer().default(0).notNull(),

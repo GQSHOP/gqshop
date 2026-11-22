@@ -1,9 +1,9 @@
 /**
  * M4-α/β：按 设计基线 DOM 全对齐重写（ADR-007 V1/V2）。
- * 结构镜像 src/dcskin/ref/home.html：banner 轮播 + notice-card + vticker +
- * 快捷分类 + dc-category-sidebar + fk-filter-bar + goods-list-section。
+ * 结构镜像 src/gqskin/ref/home.html：banner 轮播 + notice-card + vticker +
+ * 快捷分类 + gq-category-sidebar + fk-filter-bar + goods-list-section。
  * 交互（轮播自滚/vticker/滤条/搜索）React 实现，不引 jQuery。
- * 数据：dc_options.roll_bulletin/home_bulletin 为 β 接线点，本文件暂用设计基线同款静态文案。
+ * 数据：gq_options.roll_bulletin/home_bulletin 为 β 接线点，本文件暂用设计基线同款静态文案。
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -84,7 +84,7 @@ function Banner() {
   );
 }
 
-/* ---------- 滚动公告 vticker（纵向逐条，dc_options.roll_bulletin 接线） ---------- */
+/* ---------- 滚动公告 vticker（纵向逐条，gq_options.roll_bulletin 接线） ---------- */
 function RollNotice({ items }: { items: string[] }) {
   const list = items.length > 0 ? items : NOTICE_FALLBACK;
   const [row, setRow] = useState(0);
@@ -116,7 +116,7 @@ export default function Home() {
   const [keyword, setKeyword] = useState(() => new URLSearchParams(window.location.search).get("q") ?? "");
   const [sortMode, setSortMode] = useState<GoodsSort>("default");
   const [totalCount, setTotalCount] = useState(0);
-  // 公告接线（M4 收尾）：dc_options.roll_bulletin（换行多条）/home_bulletin（HTML）
+  // 公告接线（M4 收尾）：gq_options.roll_bulletin（换行多条）/home_bulletin（HTML）
   const [noticeItems, setNoticeItems] = useState<string[]>([]);
   const [homeBulletin, setHomeBulletin] = useState("");
 
@@ -161,7 +161,7 @@ export default function Home() {
       </div>
       <RollNotice items={noticeItems} />
 
-      {/* 快捷分类（dc_sort 数据驱动：sorticon 优先，未配置按序 fallback） */}
+      {/* 快捷分类（gq_sort 数据驱动：sorticon 优先，未配置按序 fallback） */}
       <div className="category-section ci-has-pager">
         <div className="ci-slide-wrapper">
           <button type="button" className="ci-slide-arrow ci-slide-prev" title="向左">‹</button>
@@ -183,26 +183,26 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 侧栏 + 商品区（上游 dc-category-product-content 双列包裹层） */}
-      <div className="dc-category-product-content">
-      <aside className="dc-category-sidebar">
-        <div className="dc-category-sidebar__title">商品分类</div>
-        <div className="dc-category-sidebar__scroll">
-          <ul className="dc-category-sidebar__list">
-            <li className={"dc-category-sidebar__item" + (activeSort === 0 ? " is-expanded" : "")}>
-              <a className="dc-category-sidebar__link" onClick={() => setActiveSort(0)}>
-                <span className="dc-category-sidebar__row">
-                  <span className="dc-category-sidebar__name">全部商品</span>
-                  <span className="dc-category-sidebar__count">{totalCount}</span>
+      {/* 侧栏 + 商品区（上游 gq-category-product-content 双列包裹层） */}
+      <div className="gq-category-product-content">
+      <aside className="gq-category-sidebar">
+        <div className="gq-category-sidebar__title">商品分类</div>
+        <div className="gq-category-sidebar__scroll">
+          <ul className="gq-category-sidebar__list">
+            <li className={"gq-category-sidebar__item" + (activeSort === 0 ? " is-expanded" : "")}>
+              <a className="gq-category-sidebar__link" onClick={() => setActiveSort(0)}>
+                <span className="gq-category-sidebar__row">
+                  <span className="gq-category-sidebar__name">全部商品</span>
+                  <span className="gq-category-sidebar__count">{totalCount}</span>
                 </span>
               </a>
             </li>
             {categories.map((c) => (
-              <li key={c.sid} className={"dc-category-sidebar__item" + (activeSort === c.sid ? " is-expanded" : "")}>
-                <a className="dc-category-sidebar__link" onClick={() => setActiveSort(c.sid)}>
-                  <span className="dc-category-sidebar__row">
-                    <span className="dc-category-sidebar__name">{c.sortname}</span>
-                    <span className="dc-category-sidebar__count">{c.count ?? ""}</span>
+              <li key={c.sid} className={"gq-category-sidebar__item" + (activeSort === c.sid ? " is-expanded" : "")}>
+                <a className="gq-category-sidebar__link" onClick={() => setActiveSort(c.sid)}>
+                  <span className="gq-category-sidebar__row">
+                    <span className="gq-category-sidebar__name">{c.sortname}</span>
+                    <span className="gq-category-sidebar__count">{c.count ?? ""}</span>
                   </span>
                 </a>
               </li>
@@ -217,15 +217,15 @@ export default function Home() {
           <a className={"fk-filter-chip" + (sortMode === "sales" ? " active" : "")} onClick={() => setSortMode("sales")}><i className="ri-fire-line fk-chip-ri" />销量</a>
           <a className={"fk-filter-chip" + (sortMode === "price" ? " active" : "")} onClick={() => setSortMode("price")}><i className="ri-price-tag-3-line fk-chip-ri" />价格</a>
           <a className={"fk-filter-chip" + (sortMode === "stock" ? " active" : "")} onClick={() => setSortMode("stock")}><i className="ri-stack-line fk-chip-ri" />库存</a>
-          <div className="dc-goods-search">
+          <div className="gq-goods-search">
             <input
-              className="dc-goods-search__input"
+              className="gq-goods-search__input"
               placeholder="输入商品关键词搜索"
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && load()}
             />
-            <button className="dc-goods-search__submit" onClick={() => load()}>
+            <button className="gq-goods-search__submit" onClick={() => load()}>
               <i className="ri-search-line" />
             </button>
           </div>
@@ -242,10 +242,10 @@ export default function Home() {
                   <div className="goods-img-box">
                     <img
                       className="goods-img"
-                      src={g.cover || "/dcskin/img/cover.svg"}
+                      src={g.cover || "/gqskin/img/cover.svg"}
                       alt={g.title}
                       loading="lazy"
-                      data-dc-image-loaded
+                      data-gq-image-loaded
                     />
                     <span className={"fk-type-badge " + (g.type === "goods_service" ? "fk-tb-orange" : "fk-tb-blue")}>
                       {g.type === "goods_service" ? "人工服务" : "自动发货"}

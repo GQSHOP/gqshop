@@ -13,31 +13,31 @@ import {
 
 /**
  * 对接分类映射
- * MySQL 原表：`dc_docking_category_map`
+ * MySQL 原表：`gq_docking_category_map`
  */
 export const dockingCategoryMapTable = pgTable(
-  "dc_docking_category_map",
+  "gq_docking_category_map",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_docking_category_map_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_docking_category_map_id_seq" }),
     source_id: integer().default(0).notNull(),
     source_cid: integer().default(0).notNull(),
     local_cid: integer().default(0).notNull(),
     create_time: integer().default(0).notNull(),
   },
   (t) => [
-    uniqueIndex("dc_docking_category_map_uk_source").on(t.source_id, t.source_cid),
-    index("dc_docking_category_map_idx_local_cid").on(t.local_cid),
+    uniqueIndex("gq_docking_category_map_uk_source").on(t.source_id, t.source_cid),
+    index("gq_docking_category_map_idx_local_cid").on(t.local_cid),
   ],
 );
 
 /**
  * 对接商品映射
- * MySQL 原表：`dc_docking_goods`
+ * MySQL 原表：`gq_docking_goods`
  */
 export const dockingGoodsTable = pgTable(
-  "dc_docking_goods",
+  "gq_docking_goods",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_docking_goods_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_docking_goods_id_seq" }),
     goods_id: integer().default(0).notNull(),
     source_id: integer().default(0).notNull(),
     source_goods_id: integer().default(0).notNull(),
@@ -46,19 +46,19 @@ export const dockingGoodsTable = pgTable(
     price_locked: smallint().default(0).notNull(),
   },
   (t) => [
-    uniqueIndex("dc_docking_goods_uk_goods").on(t.goods_id),
-    index("dc_docking_goods_idx_source").on(t.source_id),
+    uniqueIndex("gq_docking_goods_uk_goods").on(t.goods_id),
+    index("gq_docking_goods_idx_source").on(t.source_id),
   ],
 );
 
 /**
  * 代采销售记录
- * MySQL 原表：`dc_docking_sale`
+ * MySQL 原表：`gq_docking_sale`
  */
 export const dockingSaleTable = pgTable(
-  "dc_docking_sale",
+  "gq_docking_sale",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_docking_sale_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_docking_sale_id_seq" }),
     goods_id: integer().default(0).notNull(),
     order_list_id: integer().default(0).notNull(),
     sku: varchar({ length: 50 }).default('0').notNull(),
@@ -69,18 +69,18 @@ export const dockingSaleTable = pgTable(
     create_time: integer().default(0).notNull(),
   },
   (t) => [
-    index("dc_docking_sale_idx_order_list").on(t.order_list_id),
+    index("gq_docking_sale_idx_order_list").on(t.order_list_id),
   ],
 );
 
 /**
  * 同系统对接货源站配置（API+密钥）
- * MySQL 原表：`dc_docking_sources`
+ * MySQL 原表：`gq_docking_sources`
  */
 export const dockingSourcesTable = pgTable(
-  "dc_docking_sources",
+  "gq_docking_sources",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_docking_sources_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_docking_sources_id_seq" }),
     name: varchar({ length: 100 }).default('').notNull(),
     url: varchar({ length: 255 }).default('').notNull(),
     user_id: integer().default(0).notNull(),
@@ -92,37 +92,37 @@ export const dockingSourcesTable = pgTable(
     update_time: integer().default(0).notNull(),
   },
   (t) => [
-    index("dc_docking_sources_idx_active").on(t.is_active),
+    index("gq_docking_sources_idx_active").on(t.is_active),
   ],
 );
 
 /**
  * 青酒分类映射
- * MySQL 原表：`dc_qingjiu_category_map`
+ * MySQL 原表：`gq_qingjiu_category_map`
  */
 export const qingjiuCategoryMapTable = pgTable(
-  "dc_qingjiu_category_map",
+  "gq_qingjiu_category_map",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_qingjiu_category_map_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_qingjiu_category_map_id_seq" }),
     source_id: integer().default(0).notNull(),
     remote_cid: integer().default(0).notNull(),
     local_sid: integer().default(0).notNull(),
     create_time: integer().default(0).notNull(),
   },
   (t) => [
-    index("dc_qingjiu_category_map_idx_source_remote").on(t.source_id, t.remote_cid),
-    index("dc_qingjiu_category_map_idx_source_local").on(t.source_id, t.local_sid),
+    index("gq_qingjiu_category_map_idx_source_remote").on(t.source_id, t.remote_cid),
+    index("gq_qingjiu_category_map_idx_source_local").on(t.source_id, t.local_sid),
   ],
 );
 
 /**
  * 青酒商品映射
- * MySQL 原表：`dc_qingjiu_goods`
+ * MySQL 原表：`gq_qingjiu_goods`
  */
 export const qingjiuGoodsTable = pgTable(
-  "dc_qingjiu_goods",
+  "gq_qingjiu_goods",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_qingjiu_goods_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_qingjiu_goods_id_seq" }),
     source_id: integer().default(0).notNull(),
     remote_gid: integer().default(0).notNull(),
     goods_id: integer().default(0).notNull(),
@@ -133,19 +133,19 @@ export const qingjiuGoodsTable = pgTable(
     update_time: integer().default(0).notNull(),
   },
   (t) => [
-    uniqueIndex("dc_qingjiu_goods_idx_source_goods").on(t.source_id, t.goods_id),
-    index("dc_qingjiu_goods_idx_source_remote").on(t.source_id, t.remote_gid),
+    uniqueIndex("gq_qingjiu_goods_idx_source_goods").on(t.source_id, t.goods_id),
+    index("gq_qingjiu_goods_idx_source_remote").on(t.source_id, t.remote_gid),
   ],
 );
 
 /**
  * 青酒代采记录
- * MySQL 原表：`dc_qingjiu_sale`
+ * MySQL 原表：`gq_qingjiu_sale`
  */
 export const qingjiuSaleTable = pgTable(
-  "dc_qingjiu_sale",
+  "gq_qingjiu_sale",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_qingjiu_sale_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_qingjiu_sale_id_seq" }),
     goods_id: integer().default(0).notNull(),
     order_list_id: integer().default(0).notNull(),
     sku: varchar({ length: 255 }).default('0').notNull(),
@@ -157,19 +157,19 @@ export const qingjiuSaleTable = pgTable(
     update_time: integer().default(0).notNull(),
   },
   (t) => [
-    uniqueIndex("dc_qingjiu_sale_uk_order_list").on(t.order_list_id),
-    index("dc_qingjiu_sale_idx_source_order").on(t.source_id, t.source_order_id),
+    uniqueIndex("gq_qingjiu_sale_uk_order_list").on(t.order_list_id),
+    index("gq_qingjiu_sale_idx_source_order").on(t.source_id, t.source_order_id),
   ],
 );
 
 /**
  * 青酒 SKU 映射
- * MySQL 原表：`dc_qingjiu_sku_map`
+ * MySQL 原表：`gq_qingjiu_sku_map`
  */
 export const qingjiuSkuMapTable = pgTable(
-  "dc_qingjiu_sku_map",
+  "gq_qingjiu_sku_map",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_qingjiu_sku_map_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_qingjiu_sku_map_id_seq" }),
     goods_id: integer().default(0).notNull(),
     local_sku: varchar({ length: 255 }).default('0').notNull(),
     remote_sku: varchar({ length: 255 }).default('').notNull(),
@@ -177,19 +177,19 @@ export const qingjiuSkuMapTable = pgTable(
     update_time: integer().default(0).notNull(),
   },
   (t) => [
-    uniqueIndex("dc_qingjiu_sku_map_idx_goods_local").on(t.goods_id, t.local_sku),
-    index("dc_qingjiu_sku_map_idx_goods_remote").on(t.goods_id, t.remote_sku),
+    uniqueIndex("gq_qingjiu_sku_map_idx_goods_local").on(t.goods_id, t.local_sku),
+    index("gq_qingjiu_sku_map_idx_goods_remote").on(t.goods_id, t.remote_sku),
   ],
 );
 
 /**
  * 青酒上游源配置
- * MySQL 原表：`dc_qingjiu_sources`
+ * MySQL 原表：`gq_qingjiu_sources`
  */
 export const qingjiuSourcesTable = pgTable(
-  "dc_qingjiu_sources",
+  "gq_qingjiu_sources",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_qingjiu_sources_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_qingjiu_sources_id_seq" }),
     name: varchar({ length: 100 }).default('').notNull(),
     url: varchar({ length: 255 }).default('').notNull(),
     protocol: smallint().default(1).notNull(),
@@ -203,18 +203,18 @@ export const qingjiuSourcesTable = pgTable(
     update_time: integer().default(0).notNull(),
   },
   (t) => [
-    index("dc_qingjiu_sources_idx_active").on(t.is_active),
+    index("gq_qingjiu_sources_idx_active").on(t.is_active),
   ],
 );
 
 /**
  * 一慈云上游源配置
- * MySQL 原表：`dc_yiciyuan_sources`
+ * MySQL 原表：`gq_yiciyuan_sources`
  */
 export const yiciyuanSourcesTable = pgTable(
-  "dc_yiciyuan_sources",
+  "gq_yiciyuan_sources",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_yiciyuan_sources_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_yiciyuan_sources_id_seq" }),
     name: varchar({ length: 100 }).default('').notNull(),
     url: varchar({ length: 255 }).default('').notNull(),
     protocol: smallint().default(1).notNull(),
@@ -229,18 +229,18 @@ export const yiciyuanSourcesTable = pgTable(
     update_time: integer().default(0).notNull(),
   },
   (t) => [
-    index("dc_yiciyuan_sources_idx_active").on(t.is_active),
+    index("gq_yiciyuan_sources_idx_active").on(t.is_active),
   ],
 );
 
 /**
  * 一慈云商品映射
- * MySQL 原表：`dc_yiciyuan_goods`
+ * MySQL 原表：`gq_yiciyuan_goods`
  */
 export const yiciyuanGoodsTable = pgTable(
-  "dc_yiciyuan_goods",
+  "gq_yiciyuan_goods",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_yiciyuan_goods_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_yiciyuan_goods_id_seq" }),
     source_id: integer().default(0).notNull(),
     remote_gid: varchar({ length: 100 }).default('').notNull(),
     goods_id: integer().default(0).notNull(),
@@ -260,19 +260,19 @@ export const yiciyuanGoodsTable = pgTable(
     update_time: integer().default(0).notNull(),
   },
   (t) => [
-    uniqueIndex("dc_yiciyuan_goods_idx_source_goods").on(t.source_id, t.goods_id),
-    index("dc_yiciyuan_goods_idx_source_remote").on(t.source_id, t.remote_gid),
+    uniqueIndex("gq_yiciyuan_goods_idx_source_goods").on(t.source_id, t.goods_id),
+    index("gq_yiciyuan_goods_idx_source_remote").on(t.source_id, t.remote_gid),
   ],
 );
 
 /**
  * 一慈云代采记录
- * MySQL 原表：`dc_yiciyuan_sale`
+ * MySQL 原表：`gq_yiciyuan_sale`
  */
 export const yiciyuanSaleTable = pgTable(
-  "dc_yiciyuan_sale",
+  "gq_yiciyuan_sale",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_yiciyuan_sale_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_yiciyuan_sale_id_seq" }),
     goods_id: integer().default(0).notNull(),
     order_list_id: integer().default(0).notNull(),
     request_no: varchar({ length: 64 }),
@@ -287,20 +287,20 @@ export const yiciyuanSaleTable = pgTable(
     update_time: integer().default(0).notNull(),
   },
   (t) => [
-    uniqueIndex("dc_yiciyuan_sale_uk_order_list").on(t.order_list_id),
-    uniqueIndex("dc_yiciyuan_sale_uk_request_no").on(t.request_no),
-    index("dc_yiciyuan_sale_idx_source_order").on(t.source_id, t.source_order_id),
+    uniqueIndex("gq_yiciyuan_sale_uk_order_list").on(t.order_list_id),
+    uniqueIndex("gq_yiciyuan_sale_uk_request_no").on(t.request_no),
+    index("gq_yiciyuan_sale_idx_source_order").on(t.source_id, t.source_order_id),
   ],
 );
 
 /**
  * 一慈云 SKU 映射
- * MySQL 原表：`dc_yiciyuan_sku_map`
+ * MySQL 原表：`gq_yiciyuan_sku_map`
  */
 export const yiciyuanSkuMapTable = pgTable(
-  "dc_yiciyuan_sku_map",
+  "gq_yiciyuan_sku_map",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_yiciyuan_sku_map_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_yiciyuan_sku_map_id_seq" }),
     goods_id: integer().default(0).notNull(),
     local_sku: varchar({ length: 255 }).default('0').notNull(),
     remote_sku: varchar({ length: 255 }).default('').notNull(),
@@ -308,19 +308,19 @@ export const yiciyuanSkuMapTable = pgTable(
     update_time: integer().default(0).notNull(),
   },
   (t) => [
-    uniqueIndex("dc_yiciyuan_sku_map_idx_goods_local").on(t.goods_id, t.local_sku),
-    index("dc_yiciyuan_sku_map_idx_goods_remote").on(t.goods_id, t.remote_sku),
+    uniqueIndex("gq_yiciyuan_sku_map_idx_goods_local").on(t.goods_id, t.local_sku),
+    index("gq_yiciyuan_sku_map_idx_goods_remote").on(t.goods_id, t.remote_sku),
   ],
 );
 
 /**
  * MCY 上游源配置
- * MySQL 原表：`dc_mcy_sources`
+ * MySQL 原表：`gq_mcy_sources`
  */
 export const mcySourcesTable = pgTable(
-  "dc_mcy_sources",
+  "gq_mcy_sources",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_mcy_sources_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_mcy_sources_id_seq" }),
     name: varchar({ length: 100 }).default('').notNull(),
     url: varchar({ length: 255 }).default('').notNull(),
     protocol: smallint().default(1).notNull(),
@@ -335,18 +335,18 @@ export const mcySourcesTable = pgTable(
     update_time: integer().default(0).notNull(),
   },
   (t) => [
-    index("dc_mcy_sources_idx_active").on(t.is_active),
+    index("gq_mcy_sources_idx_active").on(t.is_active),
   ],
 );
 
 /**
  * MCY 商品映射
- * MySQL 原表：`dc_mcy_goods`
+ * MySQL 原表：`gq_mcy_goods`
  */
 export const mcyGoodsTable = pgTable(
-  "dc_mcy_goods",
+  "gq_mcy_goods",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_mcy_goods_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_mcy_goods_id_seq" }),
     source_id: integer().default(0).notNull(),
     remote_gid: varchar({ length: 100 }).default('').notNull(),
     goods_id: integer().default(0).notNull(),
@@ -366,19 +366,19 @@ export const mcyGoodsTable = pgTable(
     update_time: integer().default(0).notNull(),
   },
   (t) => [
-    uniqueIndex("dc_mcy_goods_idx_source_goods").on(t.source_id, t.goods_id),
-    index("dc_mcy_goods_idx_source_remote").on(t.source_id, t.remote_gid),
+    uniqueIndex("gq_mcy_goods_idx_source_goods").on(t.source_id, t.goods_id),
+    index("gq_mcy_goods_idx_source_remote").on(t.source_id, t.remote_gid),
   ],
 );
 
 /**
  * MCY 代采记录
- * MySQL 原表：`dc_mcy_sale`
+ * MySQL 原表：`gq_mcy_sale`
  */
 export const mcySaleTable = pgTable(
-  "dc_mcy_sale",
+  "gq_mcy_sale",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_mcy_sale_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_mcy_sale_id_seq" }),
     goods_id: integer().default(0).notNull(),
     order_list_id: integer().default(0).notNull(),
     request_no: varchar({ length: 64 }),
@@ -393,20 +393,20 @@ export const mcySaleTable = pgTable(
     update_time: integer().default(0).notNull(),
   },
   (t) => [
-    uniqueIndex("dc_mcy_sale_uk_order_list").on(t.order_list_id),
-    uniqueIndex("dc_mcy_sale_uk_request_no").on(t.request_no),
-    index("dc_mcy_sale_idx_source_order").on(t.source_id, t.source_order_id),
+    uniqueIndex("gq_mcy_sale_uk_order_list").on(t.order_list_id),
+    uniqueIndex("gq_mcy_sale_uk_request_no").on(t.request_no),
+    index("gq_mcy_sale_idx_source_order").on(t.source_id, t.source_order_id),
   ],
 );
 
 /**
  * MCY SKU 映射
- * MySQL 原表：`dc_mcy_sku_map`
+ * MySQL 原表：`gq_mcy_sku_map`
  */
 export const mcySkuMapTable = pgTable(
-  "dc_mcy_sku_map",
+  "gq_mcy_sku_map",
   {
-    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "dc_mcy_sku_map_id_seq" }),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "gq_mcy_sku_map_id_seq" }),
     goods_id: integer().default(0).notNull(),
     local_sku: varchar({ length: 255 }).default('0').notNull(),
     remote_sku: varchar({ length: 255 }).default('').notNull(),
@@ -414,7 +414,7 @@ export const mcySkuMapTable = pgTable(
     update_time: integer().default(0).notNull(),
   },
   (t) => [
-    uniqueIndex("dc_mcy_sku_map_idx_goods_local").on(t.goods_id, t.local_sku),
-    index("dc_mcy_sku_map_idx_goods_remote").on(t.goods_id, t.remote_sku),
+    uniqueIndex("gq_mcy_sku_map_idx_goods_local").on(t.goods_id, t.local_sku),
+    index("gq_mcy_sku_map_idx_goods_remote").on(t.goods_id, t.remote_sku),
   ],
 );
