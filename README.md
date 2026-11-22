@@ -4,7 +4,7 @@
 
 <p>
   <img alt="license" src="https://img.shields.io/badge/license-AGPL--3.0-blue">
-  <img alt="status" src="https://img.shields.io/badge/release-v1.0.0-brightgreen">
+  <img alt="status" src="https://img.shields.io/badge/release-v1.1.0-brightgreen">
   <img alt="stack" src="https://img.shields.io/badge/stack-TypeScript%20·%20Hono%20·%20PostgreSQL-blueviolet">
 </p>
 
