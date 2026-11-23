@@ -1,4 +1,4 @@
 # 镜像说明
 
-本仓库内容镜像自私有 monorepo commit `c88f1bd`（开源子集，见 ADR-002/C2）。
+本仓库内容镜像自私有 monorepo commit `9c5077d`（开源子集，见 ADR-002/C2）。
 导出时间：2026-11-23。源码许可：AGPL-3.0（见 LICENSE）。

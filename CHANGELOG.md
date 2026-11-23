@@ -5,6 +5,34 @@
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-11-23
+
+v1.1.0→v1.4.0 增量安全审查（M5 式人工审查，71 文件 +4341 行新面）修复：1 高危 + 3 中危 + 2 低危，全部 staging E2E 实证后随 prod v1.4.0 升级上线。
+
+### 修复
+- **[H] 市场首页存储型 XSS**（`sites/license/index.html`）：市场包 `description`（开发者可控文本）
+  未转义直接 innerHTML——恶意描述过审后可在 license.sc9.top 首页执行，偷 console admin token
+  → 批准任意恶意包签名分发 = 供应链攻击全部门店。修复：全字段 esc() 转义 + 下载 URL
+  encodeURIComponent（E2E：`<img onerror>`/`<script>` 描述发布后转义无活标签）
+- **[M] 市场结算并发双发 license**（`apps/license pay.ts`）：settleOrder 非事务无锁，epay 网关
+  重试并发回调可双发 license。修复：事务 + `UPDATE status=0→1 RETURNING` 抢占（抢到方发证/落账）；
+  `market_license.order_no` 唯一约束库级兜底（E2E：双线程并发 notify 均 success、license 恰 1 张）
+- **[M] 卸载/回滚路径穿越**（kernel plugin-market）：`uninstallPlugin` 的 name 未经白名单直接
+  进 `rmSync`（admin 面可删任意目录）；rollback 同理。修复：name/version 入口正则
+  （`^[a-z][a-z0-9_]{2,49}$` / semver）
+- **[M] 分店支付白名单可绕过**（trade orders）：检查挂在 middleware station（cookie 客户端可控），
+  直连 API 不带 cookie + `body.station_slug` 指定受限分店即可绕过通道管控。修复：白名单检查
+  跟随订单归属分店（body.slug 同源），middleware station 仅兜底（E2E：无 cookie 绕过被封 403）
+- **[L] 市场注册并发 23505 未优雅处理**：同 email 并发注册返回 500 → 捕获唯一约束冲突返回 409
+- **[L] seo_sitemap XML 注入**：loc 仅转义 `&`，Host 头可控 → 全字符转义（`&<>'"`）
+
+### 审查确认无问题
+- apps/license：bcrypt/统一 401 防枚举/限流/JWT 实时核号；发布链 sha256 防换包+内容寻址+原子写；
+  approve 时 paid 从库取（不信提交）；notify 验签+金额核对
+- kernel：license 验签链（canon/过期/域名/覆盖）完整；HTTP 市场源 redirect:error+超时+文件名白名单；
+  admin-dashboard 卡片权限过滤+单卡隔离
+- console.html：esc() 转义完备（含审核队列渲染面）
+
 ## [1.4.0] - 2026-11-23
 
 主线功能池四件套（所有者拍板全选）。
