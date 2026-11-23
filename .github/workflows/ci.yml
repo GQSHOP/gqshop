@@ -35,7 +35,10 @@ jobs:
           n = 0
           for f in ["packages/db/src/schema/%s.ts" % d for d in ["user","goods","order","station","docking","physical","content","system"]]:
               src = io.open(f, encoding="utf-8").read()
-              n += len(re.findall(r"pgTable\(\n\s+\"dc_", src))
+              n += len(re.findall(r"pgTable\(\n\s+\"gq_", src))
           print("pgTable exports:", n)
           assert n == 78, f"expected 78 tables, found {n}"
           PY
+
+      - name: Domain import boundary check (ADR-010 R2)
+        run: python3 -I tools/check-domain-imports.py
