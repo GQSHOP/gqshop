@@ -36,11 +36,13 @@ export function advancedPriceActive(o: AdvancedPriceOpts): boolean {
   return o.singleCents > 0 || o.profitCents > 0 || o.markupPercent > 0;
 }
 
-/** 成本规则价：无成本或规则未启用返回 null（沿用常规链）。 */
-export function costBasedUnitCents(costCents: number | null, o: AdvancedPriceOpts): number | null {
-  if ((costCents ?? 0) <= 0) return null;
-  if (o.profitCents > 0) return (costCents as number) + o.profitCents;
-  if (o.markupPercent > 0) return Math.round((costCents as number) * (1 + o.markupPercent / 100));
+/** 成本规则价：无成本或规则未启用返回 null（沿用常规链）。
+ *  costCents 接受 number|string|null——pg numeric 列经 node-pg 回传字符串（"100"+60 会变字符串拼接）。 */
+export function costBasedUnitCents(costCents: number | string | null | undefined, o: AdvancedPriceOpts): number | null {
+  const cost = Number(costCents ?? 0);
+  if (!Number.isFinite(cost) || cost <= 0) return null;
+  if (o.profitCents > 0) return cost + o.profitCents;
+  if (o.markupPercent > 0) return Math.round(cost * (1 + o.markupPercent / 100));
   return null;
 }
 

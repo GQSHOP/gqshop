@@ -80,7 +80,7 @@ export async function tryAutoUpgrade(client: import("pg").PoolClient, stationId:
     }>(
       `SELECT id, name, upgrade_mode, upgrade_sales_amount, upgrade_order_count, upgrade_days, upgrade_sub_count
        FROM gq_station_level
-       WHERE sort > (SELECT sort FROM gq_station_level WHERE id = $1) AND using = 'y'
+       WHERE sort > (SELECT sort FROM gq_station_level WHERE id = $1) AND "using" = 'y'
        ORDER BY sort ASC LIMIT 1`,
       [station.level_id],
     );
