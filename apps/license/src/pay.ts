@@ -138,63 +138,81 @@ export interface SettleResult {
 }
 
 export async function settleOrder(pool: Pool, outTradeNo: string, tradeNo: string): Promise<SettleResult> {
-  const r = await pool.query<{ id: string; account_id: string; sku_type: string; plugin_name: string | null; licensee: string; amount_cents: number; status: number }>(
-    `SELECT id, account_id, sku_type, plugin_name, licensee, amount_cents, status
-     FROM market_pay_order WHERE out_trade_no = $1 LIMIT 1`,
-    [outTradeNo],
-  );
-  const o = r.rows[0];
-  if (!o) return { ok: false, msg: "order not found" };
-  if (o.status === 1) return { ok: true, msg: "already settled" }; // 幂等
-  if (o.status !== 0) return { ok: false, msg: `order status ${o.status}` };
+  // 审查修复 M1：并发 notify（网关重试）双发 license——改事务 + UPDATE status=0→1 抢占，
+  // 只有抢到的一方发 license/落账；license 表 order_no 唯一约束兜底（部署侧 ALTER，见 schema.sql）
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const claim = await client.query<{ id: string; account_id: string; sku_type: string; plugin_name: string | null; licensee: string; amount_cents: number }>(
+      `UPDATE market_pay_order SET status = 1, trade_no = $2, paid_time = $3
+       WHERE out_trade_no = $1 AND status = 0
+       RETURNING id, account_id, sku_type, plugin_name, licensee, amount_cents`,
+      [outTradeNo, tradeNo, Date.now()],
+    );
+    const o = claim.rows[0];
+    if (!o) {
+      // 抢不到：要么不存在要么已被并发方结算——读状态区分
+      const st = await client.query<{ status: number }>(
+        `SELECT status FROM market_pay_order WHERE out_trade_no = $1 LIMIT 1`,
+        [outTradeNo],
+      );
+      await client.query("COMMIT");
+      if (!st.rows[0]) return { ok: false, msg: "order not found" };
+      return st.rows[0].status === 1
+        ? { ok: true, msg: "already settled" }
+        : { ok: false, msg: `order status ${st.rows[0].status}` };
+    }
 
-  const aid = Number(o.account_id);
-  let licenseId: number | undefined;
-  if (o.sku_type === "plugin") {
-    const lic = issueLicense({ type: "plugin", plugin: o.plugin_name ?? "", licensee: o.licensee, account: aid, expires_at: null });
-    const ins = await pool.query<{ id: string }>(
-      `INSERT INTO market_license (license_type, plugin_name, licensee, account_id, order_no, payload, sig, issued_at, expires_at)
-       VALUES ('plugin', $1, $2, $3, $4, $5, $6, $7, NULL) RETURNING id`,
-      [o.plugin_name, o.licensee, aid, outTradeNo, JSON.stringify(lic.payload), lic.sig, lic.payload.issued_at],
-    );
-    licenseId = Number(ins.rows[0].id);
-  } else {
-    const expires = Math.floor(Date.now() / 1000) + 30 * 24 * 3600;
-    const lic = issueLicense({ type: "svip", plugin: null, licensee: o.licensee, account: aid, expires_at: expires });
-    const ins = await pool.query<{ id: string }>(
-      `INSERT INTO market_license (license_type, plugin_name, licensee, account_id, order_no, payload, sig, issued_at, expires_at)
-       VALUES ('svip', NULL, $1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-      [o.licensee, aid, outTradeNo, JSON.stringify(lic.payload), lic.sig, lic.payload.issued_at, expires],
-    );
-    licenseId = Number(ins.rows[0].id);
-  }
-  await pool.query(
-    `UPDATE market_pay_order SET status = 1, trade_no = $1, paid_time = $2 WHERE id = $3`,
-    [tradeNo, Date.now(), Number(o.id)],
-  );
+    const aid = Number(o.account_id);
+    let licenseId: number | undefined;
+    if (o.sku_type === "plugin") {
+      const lic = issueLicense({ type: "plugin", plugin: o.plugin_name ?? "", licensee: o.licensee, account: aid, expires_at: null });
+      const ins = await client.query<{ id: string }>(
+        `INSERT INTO market_license (license_type, plugin_name, licensee, account_id, order_no, payload, sig, issued_at, expires_at)
+         VALUES ('plugin', $1, $2, $3, $4, $5, $6, $7, NULL) RETURNING id`,
+        [o.plugin_name, o.licensee, aid, outTradeNo, JSON.stringify(lic.payload), lic.sig, lic.payload.issued_at],
+      );
+      licenseId = Number(ins.rows[0].id);
+    } else {
+      const expires = Math.floor(Date.now() / 1000) + 30 * 24 * 3600;
+      const lic = issueLicense({ type: "svip", plugin: null, licensee: o.licensee, account: aid, expires_at: expires });
+      const ins = await client.query<{ id: string }>(
+        `INSERT INTO market_license (license_type, plugin_name, licensee, account_id, order_no, payload, sig, issued_at, expires_at)
+         VALUES ('svip', NULL, $1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+        [o.licensee, aid, outTradeNo, JSON.stringify(lic.payload), lic.sig, lic.payload.issued_at, expires],
+      );
+      licenseId = Number(ins.rows[0].id);
+    }
 
-  // γ：结算落账（sales_record；插件按抽成分成，SVIP 平台自留 dev_net=0）
-  const bps = platformFeeBps();
-  if (o.sku_type === "plugin") {
-    const dev = await pool.query<{ developer_id: string }>(
-      `SELECT developer_id FROM market_plugin WHERE name = $1 LIMIT 1`,
-      [o.plugin_name ?? ""],
-    );
-    const devId = Number(dev.rows[0]?.developer_id ?? 0);
-    const fee = Math.round(o.amount_cents * bps / 10000);
-    await pool.query(
-      `INSERT INTO market_sales_record (order_no, plugin_name, developer_id, gross_cents, platform_fee_cents, dev_net_cents, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       ON CONFLICT (order_no) DO NOTHING`,
-      [outTradeNo, o.plugin_name ?? "", devId, o.amount_cents, fee, o.amount_cents - fee, Date.now()],
-    );
-  } else {
-    await pool.query(
-      `INSERT INTO market_sales_record (order_no, plugin_name, developer_id, gross_cents, platform_fee_cents, dev_net_cents, created_at)
-       VALUES ($1, 'svip', 0, $2, $3, 0, $4)
-       ON CONFLICT (order_no) DO NOTHING`,
-      [outTradeNo, o.amount_cents, o.amount_cents, Date.now()],
-    );
+    // γ：结算落账（sales_record；插件按抽成分成，SVIP 平台自留 dev_net=0；order_no 唯一幂等）
+    const bps = platformFeeBps();
+    if (o.sku_type === "plugin") {
+      const dev = await client.query<{ developer_id: string }>(
+        `SELECT developer_id FROM market_plugin WHERE name = $1 LIMIT 1`,
+        [o.plugin_name ?? ""],
+      );
+      const devId = Number(dev.rows[0]?.developer_id ?? 0);
+      const fee = Math.round(o.amount_cents * bps / 10000);
+      await client.query(
+        `INSERT INTO market_sales_record (order_no, plugin_name, developer_id, gross_cents, platform_fee_cents, dev_net_cents, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         ON CONFLICT (order_no) DO NOTHING`,
+        [outTradeNo, o.plugin_name ?? "", devId, o.amount_cents, fee, o.amount_cents - fee, Date.now()],
+      );
+    } else {
+      await client.query(
+        `INSERT INTO market_sales_record (order_no, plugin_name, developer_id, gross_cents, platform_fee_cents, dev_net_cents, created_at)
+         VALUES ($1, 'svip', 0, $2, $3, 0, $4)
+         ON CONFLICT (order_no) DO NOTHING`,
+        [outTradeNo, o.amount_cents, o.amount_cents, Date.now()],
+      );
+    }
+    await client.query("COMMIT");
+    return { ok: true, msg: "settled", licenseId };
+  } catch (err) {
+    await client.query("ROLLBACK").catch(() => {});
+    throw err;
+  } finally {
+    client.release();
   }
-  return { ok: true, msg: "settled", licenseId };
 }

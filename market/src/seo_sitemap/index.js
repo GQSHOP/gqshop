@@ -39,10 +39,12 @@ export default {
         const urls = [`${origin}/`, `${origin}/blog`];
         for (const g of goods.rows) urls.push(`${origin}/goods/${g.id}`);
         for (const b of blogs.rows) urls.push(`${origin}/blog/${encodeURIComponent(String(b.alias || b.gid))}`);
+        // 审查修复 L：origin 含 Host 头（客户端可控）——loc 全字符转义防 XML 注入（&<>'"）
+        const esc = (s) => String(s).replace(/[&<>'"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&apos;", '"': "&quot;" }[m]));
         const xml =
           `<?xml version="1.0" encoding="UTF-8"?>\n` +
           `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
-          urls.map((u) => `  <url><loc>${u.replace(/&/g, "&amp;")}</loc></url>`).join("\n") +
+          urls.map((u) => `  <url><loc>${esc(u)}</loc></url>`).join("\n") +
           `\n</urlset>\n`;
         return new Response(xml, {
           status: 200,

@@ -61,7 +61,9 @@ CREATE TABLE IF NOT EXISTS market_license (
   sig TEXT NOT NULL,
   issued_at BIGINT NOT NULL,
   expires_at BIGINT,
-  state SMALLINT NOT NULL DEFAULT 0
+  state SMALLINT NOT NULL DEFAULT 0,
+  -- 审查修复 M1：一笔订单至多一张 license（并发 notify 双发库级兜底；存量库部署侧 ALTER）
+  CONSTRAINT market_license_order_uniq UNIQUE (order_no)
 );
 CREATE INDEX IF NOT EXISTS market_license_account_idx ON market_license (account_id, state);
 -- γ 运营台（ADR-012 A6）：结算落账（settle 时写入，day one 记账）

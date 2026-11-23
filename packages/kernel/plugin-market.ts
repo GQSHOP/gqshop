@@ -289,6 +289,10 @@ async function enableInActivePlugins(
 
 /** 回滚：指针切回本地已有版本目录（零下载）。 */
 export async function rollbackPlugin(name: string, version: string): Promise<InstallResult> {
+  // 审查修复 M2：name/version 进文件路径——白名单正则防穿越（admin 面纵深防线）
+  if (!/^[a-z][a-z0-9_]{2,49}$/.test(name) || !/^\d+\.\d+\.\d+$/.test(version)) {
+    throw new Error(`非法 name/version: ${name}@${version}`);
+  }
   const dir = join(pluginsRoot(), name, version);
   if (!existsSync(join(dir, "plugin.json"))) throw new Error(`本地无版本 ${name}@${version}`);
   const list = listInstalled().filter((r) => r.name !== name);
@@ -302,6 +306,10 @@ export async function uninstallPlugin(
   pool: import("pg").Pool | import("pg").PoolClient,
   name: string,
 ): Promise<void> {
+  // 审查修复 M2：rmSync 递归删除前白名单校验（防 admin 面 name 路径穿越删除任意目录）
+  if (!/^[a-z][a-z0-9_]{2,49}$/.test(name)) {
+    throw new Error(`非法 name: ${name}`);
+  }
   rmSync(join(pluginsRoot(), name), { recursive: true, force: true });
   saveInstalled(listInstalled().filter((r) => r.name !== name));
   const r = await pool.query<{ option_value: string }>(

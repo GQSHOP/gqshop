@@ -94,11 +94,20 @@ authRoutes.post("/api/auth/register", async (c) => {
   const count = await pool.query<{ cnt: string }>(`SELECT COUNT(*) AS cnt FROM market_account`);
   const isFirst = Number(count.rows[0].cnt) === 0;
   const hash = bcrypt.hashSync(password, 10);
-  const r = await pool.query<{ id: string }>(
-    `INSERT INTO market_account (email, password_hash, display_name, role, created_at)
-     VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-    [email, hash, displayName, isFirst ? "admin" : "customer", Date.now()],
-  );
+  // 审查修复 L：dup 检查与 INSERT 之间并发同 email → 唯一约束 23505（409 而非 500）
+  let r: { rows: Array<{ id: string }> };
+  try {
+    r = await pool.query<{ id: string }>(
+      `INSERT INTO market_account (email, password_hash, display_name, role, created_at)
+       VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+      [email, hash, displayName, isFirst ? "admin" : "customer", Date.now()],
+    );
+  } catch (e) {
+    if (String((e as { code?: string }).code) === "23505") {
+      return c.json({ code: 409, msg: "email 已注册" }, 409);
+    }
+    throw e;
+  }
   const role = isFirst ? "admin" : "customer";
   const token = await signMarketToken(Number(r.rows[0].id), role);
   return c.json({ code: 0, data: { token, role, first_admin: isFirst } }, 201);

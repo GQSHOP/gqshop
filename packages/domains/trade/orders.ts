@@ -84,15 +84,11 @@ ordersRoutes.post("/v1/shop/orders", requireAuthOptional(), async (c) => {
   // M5-γ：支付方式白名单来自插件注册表（active_plugins 可停用通道）
   const payPluginRaw = String(body.pay_plugin);
   const payPlugin = isValidPayPlugin(payPluginRaw) ? payPluginRaw : "epay_ali";
-  // 功能池③：分店级插件白名单——分店上下文的订单，支付通道提供插件须在白名单内
-  const stationCtx = c.get("station") as unknown as { id: number } | null;
-  if (stationCtx) {
-    const allow = await stationPluginAllowSet(pool, stationCtx.id);
-    const provider = payPluginProvider(payPlugin);
-    if (allow && provider && !allow.has(provider)) {
-      return c.json({ code: 403, msg: `该分店未开通支付通道 ${payPlugin}` }, 403);
-    }
-  }
+  // 功能池③：分店级插件白名单——支付通道提供插件须在订单归属分店的白名单内。
+  // 审查修复 M3：归属以 body.station_slug 解析为准（middleware station 来自 cookie，客户端可控，
+  // 直连 API 不带 cookie 可绕过管控）；cookie 兜底（店面旧路径无 body.slug 的场景）
+  const middlewareStation = c.get("station") as unknown as { id: number } | null;
+  const slugRaw = typeof body.station_slug === "string" ? body.station_slug.slice(0, 50) : "";
   const tel = typeof body.tel === "string" ? body.tel.slice(0, 255) : "";
   const email = typeof body.email === "string" ? body.email.slice(0, 255) : "";
   const idemKey =
@@ -157,7 +153,7 @@ ordersRoutes.post("/v1/shop/orders", requireAuthOptional(), async (c) => {
     // 分店归属（M3 D5）：body.station_slug 解析激活分店（默认 0 主站）；station 供加价/停用校验
     let stationId = 0;
     let station: { id: number; status: number; master_goods: number } | null = null;
-    const stationSlug = typeof body.station_slug === "string" ? body.station_slug.slice(0, 50) : "";
+    const stationSlug = slugRaw;
     if (stationSlug) {
       const st = await client.query(
         `SELECT id, status, master_goods FROM gq_station WHERE slug = $1 AND delete_time IS NULL LIMIT 1`,
@@ -168,6 +164,19 @@ ordersRoutes.post("/v1/shop/orders", requireAuthOptional(), async (c) => {
       if (row.status !== 1) throw Object.assign(new Error("当前分店已停用"), { http: 403 });
       stationId = row.id;
       station = { id: row.id, status: row.status, master_goods: row.master_goods ?? 1 };
+      // 功能池③（审查修复 M3）：白名单检查跟随订单归属分店（body.slug 同源），cookie 无法绕过
+      const allow = await stationPluginAllowSet(pool, stationId);
+      const provider = payPluginProvider(payPlugin);
+      if (allow && provider && !allow.has(provider)) {
+        throw Object.assign(new Error(`该分店未开通支付通道 ${payPlugin}`), { http: 403 as const });
+      }
+    } else if (middlewareStation) {
+      // 无 body.slug 但 middleware 解析到分店（Host 域名/cookie 店面）：按该店白名单拦（展示一致性兜底）
+      const allow = await stationPluginAllowSet(pool, middlewareStation.id);
+      const provider = payPluginProvider(payPlugin);
+      if (allow && provider && !allow.has(provider)) {
+        throw Object.assign(new Error(`该分店未开通支付通道 ${payPlugin}`), { http: 403 as const });
+      }
     }
 
     // 价格链（M7 C2 对齐 Level_Service::getActiveLevelId）：等级过期视为无等级（掉 user_price 档）
