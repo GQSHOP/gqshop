@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>开发者文档 · GQSHOP 应用市场</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,'PingFang SC',sans-serif;background:#f5f6f8;color:#222;font-size:14px;line-height:1.7}
+header{background:linear-gradient(135deg,#1560e8,#1b6dff);color:#fff;padding:36px 20px;text-align:center}
+header h1{font-size:24px;margin-bottom:6px}
+header p{opacity:.85;font-size:13px}
+nav{background:#fff;border-bottom:1px solid #eceef2;position:sticky;top:0;z-index:9}
+nav .in{max-width:880px;margin:0 auto;display:flex;gap:4px;overflow-x:auto;padding:0 12px}
+nav a{padding:11px 14px;color:#555;text-decoration:none;font-size:13px;white-space:nowrap;border-bottom:2px solid transparent}
+nav a:hover{color:#1b6dff}nav a.on{color:#1b6dff;border-bottom-color:#1b6dff}
+main{max-width:880px;margin:0 auto;padding:24px 16px 60px}
+section{margin-bottom:40px}
+h2{font-size:18px;margin:0 0 14px;padding-left:10px;border-left:4px solid #1b6dff}
+h3{font-size:15px;margin:18px 0 8px}
+p{margin:8px 0;color:#444}
+code{background:#eef4ff;padding:2px 6px;border-radius:4px;font-size:12.5px;font-family:ui-monospace,Consolas,monospace}
+pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px;overflow-x:auto;font-size:12.5px;line-height:1.6;font-family:ui-monospace,Consolas,monospace;margin:10px 0}
+pre code{background:none;padding:0;color:inherit}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;font-size:13px;margin:10px 0;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+th{background:#f2f6ff;text-align:left;padding:9px 12px;font-weight:600;white-space:nowrap}
+td{padding:8px 12px;border-top:1px solid #f0f2f6;vertical-align:top}
+td code{white-space:nowrap}
+.steps{counter-reset:s;list-style:none}
+.steps li{background:#fff;border-radius:10px;padding:14px 16px 14px 52px;margin-bottom:8px;position:relative;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.steps li::before{counter-increment:s;content:counter(s);position:absolute;left:14px;top:14px;width:26px;height:26px;border-radius:50%;background:#1b6dff;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.note{background:#fffbe8;border:1px solid #f5e6a8;border-radius:10px;padding:12px 16px;margin:10px 0;font-size:13px}
+.ok{color:#0a7d33}.warn{color:#a06b00}
+footer{text-align:center;padding:32px 16px;color:#999;font-size:12px}
+.back{display:inline-block;margin-bottom:14px;color:#1b6dff;text-decoration:none;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+<h1>开发者文档</h1>
+<p>GQSHOP 应用市场 · 插件开发 / 上架审核 / 付费与 license · 店主接入</p>
+</header>
+<nav><div class="in">
+<a href="#quick">快速开始</a><a href="#pkg">包结构</a><a href="#scan">自动检查</a><a href="#api">插件 API</a><a href="#examples">示例</a><a href="#paid">付费与 license</a><a href="#shop">店主接入</a><a href="#official">官方插件</a>
+</div></nav>
+<main>
+
+<section id="quick">
+<h2>快速开始：从零到上架</h2>
+<ol class="steps">
+<li><strong>注册市场账号</strong>：前往 <a href="/console.html" style="color:#1b6dff">开发者控制台</a> 注册（email + 密码）。市场账号独立于店铺用户体系。</li>
+<li><strong>申请开发者</strong>：登录后在控制台提交开发者申请（简介 ≥20 字：作品/技术背景），平台审批通过后获得提交权限。</li>
+<li><strong>开发插件</strong>：一个目录两个文件——<code>plugin.json</code>（清单）+ <code>index.js</code>（ESM 入口，默认导出插件定义）。无需构建链，原生 Node 24 语法直接跑。</li>
+<li><strong>打包提交</strong>：zip 打平这两个文件（≤2MB），控制台上传提交，填写版本号与定价（免费 /onetime 买断）。</li>
+<li><strong>审核发布</strong>：先过自动检查（结构/安全扫描/语法），再人工审核。批准后平台 <strong>ed25519 签名发布</strong>——私钥仅在平台侧，开发者永不持签。</li>
+</ol>
+<div class="note">版本规则：<code>published</code> 版本不可覆盖；新版本走正常提交；被拒版本修复后可重提（覆盖原提交）。插件名全局先到先得。</div>
+</section>
+
+<section id="pkg">
+<h2>包结构与 plugin.json 规范</h2>
+<pre><code>my_plugin.zip
+├── plugin.json     # 清单（必须）
+└── index.js        # ESM 入口（默认；可在 entry 指定别名）</code></pre>
+<table>
+<tr><th>字段</th><th>必填</th><th>说明</th></tr>
+<tr><td><code>name</code></td><td>✓</td><td><code>^[a-z][a-z0-9_]{2,49}$</code>，与提交名一致，全局唯一先到先得</td></tr>
+<tr><td><code>version</code></td><td>✓</td><td>semver 三段式（如 <code>1.0.0</code>），与提交版本一致</td></tr>
+<tr><td><code>description</code></td><td>建议</td><td>≤500 字，市场列表展示</td></tr>
+<tr><td><code>entry</code></td><td>可选</td><td>入口文件名，默认 <code>index.js</code>；须匹配 <code>^[a-zA-Z0-9_.-]+$</code></td></tr>
+<tr><td><code>assets</code></td><td>可选</td><td>随包分发的附加文件数组（条目名进 zip 白名单校验）</td></tr>
+</table>
+<h3>硬性限制</h3>
+<table>
+<tr><th>项</th><th>限制</th></tr>
+<tr><td>zip 体积</td><td>≤ 2MB（解压后 ≤ 8MB）</td></tr>
+<tr><td>条目数</td><td>1–64 个文件</td></tr>
+<tr><td>路径</td><td>禁止绝对路径 / <code>..</code> / 白名单外字符（zip-slip 防护）</td></tr>
+</table>
+</section>
+
+<section id="scan">
+<h2>自动检查（auto_scan）披露清单</h2>
+<p>提交时全量静态扫描，<strong>不过门直接拒</strong>；以下模式<strong>不阻断但计入披露</strong>，供人工审核重点核对——请在文档/简介里说明用途：</p>
+<table>
+<tr><th>模式</th><th>审核关注点</th></tr>
+<tr><td><code>process.env</code></td><td>读取了哪些环境变量、用途</td></tr>
+<tr><td><code>node:fs / fs</code></td><td>文件读写范围（建议只读自身目录）</td></tr>
+<tr><td><code>child_process</code></td><td>基本会被拒，除非强需求</td></tr>
+<tr><td><code>node:net</code></td><td>原始套接字用途</td></tr>
+<tr><td><code>http(s) / 外联 URL</code></td><td>webhook/上报类必须仅 https + 禁私网 + 禁重定向</td></tr>
+<tr><td><code>eval / new Function</code></td><td>动态代码执行，基本会被拒</td></tr>
+</table>
+<div class="note">入口文件会以 <code>node --check</code> 做语法校验。进程内信任模型（S1）：插件与 core 同进程运行，审核是安全主闸——详见仓库 SECURITY.md。</div>
+</section>
+
+<section id="api">
+<h2>插件 API 参考</h2>
+<p>入口默认导出插件定义（纯对象，无需框架）：</p>
+<pre><code>export default {
+  name: "my_plugin",
+  version: "1.0.0",
+  description: "一句话说明",
+  configSchema: [ ... ],        // 可选：admin 配置表单（见下）
+  activate(ctx) { ... },        // 启动加载时调用（重启生效，不热载）
+  deactivate(ctx) { ... },      // 可选：停用清理
+}</code></pre>
+
+<h3>PluginContext（ctx）</h3>
+<table>
+<tr><th>成员</th><th>说明</th></tr>
+<tr><td><code>ctx.log(msg)</code></td><td>日志（前缀 <code>[plugin:名]</code> 进 core 日志）</td></tr>
+<tr><td><code>ctx.options.get/set(name, value?)</code></td><td><code>gq_options</code> 受控读写（配置即读即用）</td></tr>
+<tr><td><code>ctx.query(sql, params)</code></td><td>受控 SQL 执行器——<strong>必须 $n 参数化</strong>，禁止字符串拼接</td></tr>
+<tr><td><code>ctx.bus.on(事件, handler)</code></td><td>订阅事件总线（异常隔离，单插件失败不阻断主流程）</td></tr>
+<tr><td><code>ctx.registerGoodsType(entry)</code></td><td>注册商品类型（发货 handler 同事务）</td></tr>
+<tr><td><code>ctx.registerPayPlugin(entry)</code></td><td>注册支付方式（清单+下单校验）</td></tr>
+<tr><td><code>ctx.registerRoute(route)</code></td><td>自定义 HTTP 路由（method/path/handler，path 以 / 开头）</td></tr>
+<tr><td><code>ctx.registerDashboardCard(entry)</code></td><td>后台仪表盘卡片（数据三形态，插件不注入前端代码）</td></tr>
+</table>
+
+<h3>事件总线（13 事件）</h3>
+<table>
+<tr><th>事件</th><th>payload 要点</th></tr>
+<tr><td><code>core:init</code></td><td>启动完成</td></tr>
+<tr><td><code>order:created</code></td><td>orderId / outTradeNo / userId / amountCents</td></tr>
+<tr><td><code>pay:settled</code></td><td>orderId / gateway / amountCents / executor（同结算事务）</td></tr>
+<tr><td><code>deliver:after</code> / <code>deliver:failed</code></td><td>orderId / goodsType / contents|error</td></tr>
+<tr><td><code>stock:low</code></td><td>goodsId / stock（支付扣减后 ≤10）</td></tr>
+<tr><td><code>user:registered</code></td><td>uid / superior</td></tr>
+<tr><td><code>aftersale:created</code> / <code>aftersale:refunded</code></td><td>aftersaleId / orderId；退款单（executor 同事务，佣金反扣链）</td></tr>
+<tr><td><code>station:opened</code> / <code>withdraw:reviewed</code></td><td>分店开通 / 提现审核</td></tr>
+</table>
+
+<h3>配置表单（configSchema）</h3>
+<p>声明后 admin 插件页自动渲染表单，存 <code>gq_options</code> 的 <code>plugin_config:{name}</code>（JSON blob），键白名单+类型强制：</p>
+<pre><code>configSchema: [
+  { key: "webhook_url", label: "Webhook URL（仅 https）", type: "string",
+    placeholder: "https://…" },
+  { key: "secret", label: "签名密钥", type: "password", hint: "留空不签名" },
+  { key: "interval", label: "去抖秒数", type: "number" },
+  { key: "enabled", label: "开关", type: "boolean" },
+]</code></pre>
+
+<h3>仪表盘卡片数据三形态</h3>
+<table>
+<tr><th>type</th><th>结构</th></tr>
+<tr><td><code>stats</code></td><td><code>{ items: [{label, value}] }</code> 指标卡</td></tr>
+<tr><td><code>list</code></td><td><code>{ columns: [], rows: [[]] }</code> 表格卡</td></tr>
+<tr><td><code>text</code></td><td><code>{ text: "…" }</code> 文本卡（空态友好）</td></tr>
+</table>
+<p>卡片可加 <code>perm: "aftersale.manage"</code> 等权限位，无权限账号不渲染。</p>
+</section>
+
+<section id="examples">
+<h2>示例代码</h2>
+<h3>最小插件（3 行激活）</h3>
+<pre><code>export default {
+  name: "hello_world", version: "1.0.0",
+  description: "示例：订阅支付事件打日志",
+  activate(ctx) {
+    ctx.bus.on("hello_world", "pay:settled", (p) => {
+      ctx.log(`收到支付 ¥${(p.amountCents / 100).toFixed(2)} order#${p.orderId}`);
+    });
+  },
+}</code></pre>
+<h3>公开路由插件（SEO / 回调类）</h3>
+<pre><code>export default {
+  name: "my_route", version: "1.0.0",
+  activate(ctx) {
+    ctx.registerRoute({
+      method: "GET", path: "/my-plugin/hello",
+      handler: (c) => new Response("hello from plugin", {
+        headers: { "content-type": "text/plain; charset=utf-8" },
+      }),
+    });
+  },
+}</code></pre>
+<h3>卡片插件（经营统计）</h3>
+<pre><code>export default {
+  name: "my_card", version: "1.0.0",
+  activate(ctx) {
+    ctx.registerDashboardCard({
+      id: "today", title: "今日订单",
+      load: async (q) => {
+        const r = await q.query(
+          "SELECT COUNT(*)::int AS cnt FROM gq_order WHERE create_time >= $1",
+          [Date.now() - 86400000]);
+        return { type: "stats", items: [{ label: "24h", value: r.rows[0].cnt + " 单" }] };
+      },
+    });
+  },
+}</code></pre>
+<p class="warn">SQL 一律 $n 参数化——拼接 SQL 会被审核直接拒绝。</p>
+</section>
+
+<section id="paid">
+<h2>付费与 license 机制</h2>
+<table>
+<tr><th>模型</th><th>说明</th></tr>
+<tr><td><code>free</code></td><td>免费，直接安装</td></tr>
+<tr><td><code>onetime</code></td><td>买断（含后续升级），按插件+域名授权</td></tr>
+<tr><td><code>svip</code></td><td>店主侧订阅：月度 SVIP 覆盖全部付费插件</td></tr>
+</table>
+<h3>购买与授权流</h3>
+<ol class="steps">
+<li>店主在控制台购买：<code>插件 + 店铺域名</code>（licensee 即域名，license 与域名绑定，非账号）。</li>
+<li>epay 支付（MD5 验签+金额核对+幂等结算）→ 平台签发 license（JSON + ed25519 签名）。</li>
+<li>控制台下载 <code>{plugin}.lic</code> → 店铺后台「插件管理 → 导入 license」（写入前完整复验：验签+域名匹配）。</li>
+<li>安装/升级付费插件时内核校验 license（<strong>已装不回收</strong>，只挡新装与升级）。</li>
+</ol>
+<h3>license 生命周期</h3>
+<table>
+<tr><th>操作</th><th>行为</th></tr>
+<tr><td>重购限制</td><td>同域名持有效授权（或 SVIP）时重复购买被拒（409）</td></tr>
+<tr><td>作废（平台）</td><td>附理由作废；已装实例不回收，解除重购限制</td></tr>
+<tr><td>重签（平台）</td><td>签名钥轮换配套：当前钥重签全部有效 license，店主重新下载</td></tr>
+<tr><td>下架（平台）</td><td>市场索引移除全部版本（zip 保留）；已装不回收；恢复=新版本过审</td></tr>
+</table>
+<h3>结算（平台抽成）</h3>
+<p>每笔成交落 <code>market_sales_record</code>：开发者净额 = 毛额 ×（1 − 平台抽成基点/10000），默认抽成 30%。控制台「我的收益」实时可查；平台侧月度 CSV 对账导出。</p>
+</section>
+
+<section id="shop">
+<h2>店主接入市场</h2>
+<ol class="steps">
+<li>core 环境变量配置市场源：<code>GQSHOP_MARKET_URL=https://license.sc9.top/repo</code></li>
+<li>后台「插件管理 → 应用市场」浏览清单，安装/升级/回滚/卸载（重启 core 生效）。</li>
+<li>每个包安装时内核自动<strong>双验签</strong>（sha256 哈希 + ed25519 签名），篡改即拒。</li>
+<li>付费插件：先在 <a href="/console.html" style="color:#1b6dff">控制台</a> 购买下载 .lic，再在插件页「导入 license」。</li>
+</ol>
+<div class="note">自建市场也行：<code>GQSHOP_MARKET_DIR</code> 指向本地目录（只读卷），格式与线上一致（market-index.json + zip）。</div>
+</section>
+
+<section id="official">
+<h2>官方插件</h2>
+<table>
+<tr><th>插件</th><th>版本</th><th>定价</th><th>说明</th></tr>
+<tr><td><code>seo_sitemap</code></td><td>1.0.1</td><td>免费</td><td>自动生成 /sitemap.xml（商品+博客 ≤1000 条）与 /robots.txt，多域名各自生效</td></tr>
+<tr><td><code>order_webhook</code></td><td>1.0.0</td><td>免费</td><td>新订单/支付成功/新售后三事件 webhook 推送，HMAC-SHA256 签名防伪，企微/飞书/钉钉通用</td></tr>
+<tr><td><code>today_snapshot</code></td><td>1.0.0</td><td>免费</td><td>仪表盘「今日快照」：今日订单/GMV/待支付/待处理售后（东八区自然日）</td></tr>
+<tr><td><code>advanced_stats</code></td><td>1.0.0</td><td>¥9.90 买断</td><td>高级统计三卡：商品销量 Top10 / 下单→支付转化 / 买家复购率</td></tr>
+<tr><td><code>goods_demo</code> / <code>paid_beta</code></td><td>—</td><td>免费/付费</td><td>验收演示件（链路示例参考）</td></tr>
+</table>
+</section>
+
+<p class="back"><a href="/">← 返回市场首页</a></p>
+</main>
+<footer>© 2026 GQSHOP · 自部署开源电商 · <a href="https://github.com/GQSHOP/gqshop" style="color:#999">GitHub</a> · <a href="/console.html" style="color:#999">开发者控制台</a></footer>
+</body>
+</html>

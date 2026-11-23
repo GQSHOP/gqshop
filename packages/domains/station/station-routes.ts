@@ -342,7 +342,55 @@ stationRoutes.get("/v1/admin/station", async (c) => {
      LEFT JOIN gq_station_level l ON l.id = s.level_id
      WHERE s.delete_time IS NULL ORDER BY s.id DESC LIMIT 100`,
   );
-  return c.json({ code: 0, data: r.rows });
+  // 功能池③：附各店插件白名单（station_plugin_allow JSON map；未配置=*全允许）
+  const allowMap = await readPluginAllowMap(pool);
+  const list = r.rows.map((row: Record<string, unknown>) => ({
+    ...row,
+    plugin_allow: allowMap[String(row.id)] ?? null,
+  }));
+  return c.json({ code: 0, data: list });
+});
+
+/** station_plugin_allow 选项读取与写入（{"<stationId>":["plugin",…]}）。 */
+async function readPluginAllowMap(pool: import("pg").Pool): Promise<Record<string, string[]>> {
+  const r = await pool.query<{ option_value: string }>(
+    `SELECT option_value FROM gq_options WHERE option_name = 'station_plugin_allow' LIMIT 1`,
+  );
+  if (!r.rows[0]) return {};
+  try {
+    const parsed = JSON.parse(r.rows[0].option_value) as Record<string, unknown>;
+    const out: Record<string, string[]> = {};
+    for (const [k, v] of Object.entries(parsed)) {
+      if (Array.isArray(v)) out[k] = v.map(String).filter((s) => /^[a-z][a-z0-9_]{1,49}$/.test(s));
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+/** 分店插件白名单编辑：body {plugins: string[]}——空数组=恢复全允许（删条目）。 */
+stationRoutes.put("/v1/admin/station/:id/plugin-allow", async (c) => {
+  const denied = await adminPermGuard(c, "station.manage");
+  if (denied) return denied;
+  const pool = c.get("pool");
+  const id = Number(c.req.param("id"));
+  const st = await pool.query(`SELECT 1 FROM gq_station WHERE id = $1 AND delete_time IS NULL LIMIT 1`, [id]);
+  if (!st.rows[0]) return c.json({ code: 404, msg: "station not found" }, 404);
+  const body = (await c.req.json().catch(() => null)) as { plugins?: unknown } | null;
+  if (!body || !Array.isArray(body.plugins)) {
+    return c.json({ code: 400, msg: "plugins (string[]) required" }, 400);
+  }
+  const plugins = [...new Set(body.plugins.map(String))].filter((s) => /^[a-z][a-z0-9_]{1,49}$/.test(s)).slice(0, 100);
+  const map = await readPluginAllowMap(pool);
+  if (plugins.length === 0) delete map[String(id)];
+  else map[String(id)] = plugins;
+  await pool.query(
+    `INSERT INTO gq_options (option_name, option_value) VALUES ('station_plugin_allow', $1)
+     ON CONFLICT (option_name) DO UPDATE SET option_value = $1`,
+    [JSON.stringify(map)],
+  );
+  return c.json({ code: 0, msg: plugins.length === 0 ? "已恢复全允许" : `白名单已更新（${plugins.length} 项）`, data: { plugins } });
 });
 
 stationRoutes.patch("/v1/admin/station/:id/status", async (c) => {

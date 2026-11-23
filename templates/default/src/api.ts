@@ -53,6 +53,8 @@ export interface Sku {
   sku: string;
   market_price: number | null;
   guest_price: number | null;
+  /** 功能池④：规则感知展示价（高级定价未启用时=guest 兜底价） */
+  eff_price?: number | null;
   stock: number | null;
   sales: number | null;
 }
@@ -70,6 +72,11 @@ export interface GoodsDetail extends GoodsCard {
   unit_name: string | null;
   skus: Sku[];
   discounts: DiscountRule[];
+  /** 功能池②：密码商品/付费内容——bought_password/pay_content 已购后非空；has_* 为锁定占位标记 */
+  has_password?: boolean;
+  has_pay_content?: boolean;
+  bought_password?: string | null;
+  pay_content?: string | null;
 }
 
 export interface OrderCreated {
@@ -88,7 +95,7 @@ export interface OrderView {
     payment: string | null;
     create_time: string | null;
   };
-  items: Array<{ goods_title: string; quantity: number; price: number; status: number }>;
+  items: Array<{ goods_id: number | null; goods_title: string; quantity: number; price: number; status: number }>;
   contents: string[];
 }
 

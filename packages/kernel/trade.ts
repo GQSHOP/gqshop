@@ -12,14 +12,36 @@ export function genOutTradeNo(now = new Date()): string {
 /** 价格链（M7 C2 对齐上游 Level_Price::calculate 通用段）：
  *  会员：member_price 覆盖 > user_price > guest_price；
  *  注册普通（uid>0, level=0）：user_price > guest_price；
- *  游客：guest_price。market_price 仅作最终兜底。
- *  （single_rule/cost+markup 高级定价层 上游 默认全关，未实现——配置启用属 M7 后续。） */
+ *  游客：guest_price。market_price 仅作最终兜底。 */
 export function unitPriceCents(
   sku: { guest_price: number | null; user_price?: number | null; market_price: number | null },
   isRegistered = false,
 ): number {
   if (isRegistered && (sku.user_price ?? 0) > 0) return sku.user_price as number;
   return sku.guest_price ?? sku.market_price ?? 0;
+}
+
+/** 高级定价层（功能池④，上游 single_rule/cost+markup/profit_rule 的 GQSHOP 语义，默认全关）。
+ *  - single_rule（全场统一价）：>0 时压过一切价格（含会员价覆盖）——促销语义；
+ *  - profit_rule（成本+固定利润）：SKU 有 cost_price 时替代常规链基价；
+ *  - cost_markup（成本加成 %）：同上，二者同时启用时 profit 优先。
+ *  与会员价覆盖的优先级：single > member_price > profit/markup > 常规链。 */
+export interface AdvancedPriceOpts {
+  singleCents: number;
+  profitCents: number;
+  markupPercent: number;
+}
+
+export function advancedPriceActive(o: AdvancedPriceOpts): boolean {
+  return o.singleCents > 0 || o.profitCents > 0 || o.markupPercent > 0;
+}
+
+/** 成本规则价：无成本或规则未启用返回 null（沿用常规链）。 */
+export function costBasedUnitCents(costCents: number | null, o: AdvancedPriceOpts): number | null {
+  if ((costCents ?? 0) <= 0) return null;
+  if (o.profitCents > 0) return (costCents as number) + o.profitCents;
+  if (o.markupPercent > 0) return Math.round((costCents as number) * (1 + o.markupPercent / 100));
+  return null;
 }
 
 export function calcTotalCents(unit: number, quantity: number): number {

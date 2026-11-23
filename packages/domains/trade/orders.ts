@@ -5,10 +5,11 @@
 import { Hono } from "hono";
 
 import type { AppEnv } from "@gqshop/kernel";
-import { requireAuthOptional } from "@gqshop/kernel";
-import { isValidPayPlugin, listPayPlugins } from "@gqshop/kernel";
+import { requireAuthOptional, bus } from "@gqshop/kernel";
+import { isValidPayPlugin, listPayPlugins, payPluginProvider } from "@gqshop/kernel";
 import { applyBestDiscount } from "./promo-aftersale.js";
-import { calcTotalCents, genOutTradeNo, unitPriceCents, getShippingQuote } from "@gqshop/kernel";
+import { readAdvancedPriceOpts } from "./pricing.js";
+import { calcTotalCents, genOutTradeNo, unitPriceCents, getShippingQuote, costBasedUnitCents } from "@gqshop/kernel";
 import type { StationContext } from "@gqshop/kernel";
 
 export const ordersRoutes = new Hono<AppEnv>();
@@ -30,10 +31,41 @@ interface CreateBody {
   idempotency_key?: string;
 }
 
-/** 支付方式清单（公开；注册表驱动，店面下拉用）。 */
+/** 支付方式清单（公开；注册表驱动，店面下拉用）。
+ *  功能池③：分店上下文存在时按 station_plugin_allow 白名单过滤（未配置=全允许）。 */
 ordersRoutes.get("/v1/shop/pay-methods", async (c) => {
-  return c.json({ code: 0, data: { list: listPayPlugins().map((p) => ({ name: p.name, label: p.label, kind: p.kind })) } });
+  const pool = c.get("pool");
+  const station = c.get("station") as unknown as { id: number } | null;
+  const all = listPayPlugins();
+  let list = all.map((p) => ({ name: p.name, label: p.label, kind: p.kind }));
+  if (station) {
+    const allow = await stationPluginAllowSet(pool, station.id);
+    if (allow) {
+      list = list.filter((p) => {
+        const provider = payPluginProvider(p.name);
+        return provider === null || allow.has(provider);
+      });
+    }
+  }
+  return c.json({ code: 0, data: { list } });
 });
+
+/** 读分店插件白名单（gq_options station_plugin_allow={"<stationId>":["plugin",…]}；
+ *  无条目=null 表示全允许）。 */
+async function stationPluginAllowSet(pool: import("pg").Pool, stationId: number): Promise<Set<string> | null> {
+  const r = await pool.query<{ option_value: string }>(
+    `SELECT option_value FROM gq_options WHERE option_name = 'station_plugin_allow' LIMIT 1`,
+  );
+  if (!r.rows[0]) return null;
+  try {
+    const map = JSON.parse(r.rows[0].option_value) as Record<string, string[]>;
+    const arr = map[String(stationId)];
+    if (!Array.isArray(arr) || arr.length === 0) return null;
+    return new Set(arr.map(String));
+  } catch {
+    return null;
+  }
+}
 
 ordersRoutes.post("/v1/shop/orders", requireAuthOptional(), async (c) => {
   const pool = c.get("pool");
@@ -52,6 +84,15 @@ ordersRoutes.post("/v1/shop/orders", requireAuthOptional(), async (c) => {
   // M5-γ：支付方式白名单来自插件注册表（active_plugins 可停用通道）
   const payPluginRaw = String(body.pay_plugin);
   const payPlugin = isValidPayPlugin(payPluginRaw) ? payPluginRaw : "epay_ali";
+  // 功能池③：分店级插件白名单——分店上下文的订单，支付通道提供插件须在白名单内
+  const stationCtx = c.get("station") as unknown as { id: number } | null;
+  if (stationCtx) {
+    const allow = await stationPluginAllowSet(pool, stationCtx.id);
+    const provider = payPluginProvider(payPlugin);
+    if (allow && provider && !allow.has(provider)) {
+      return c.json({ code: 403, msg: `该分店未开通支付通道 ${payPlugin}` }, 403);
+    }
+  }
   const tel = typeof body.tel === "string" ? body.tel.slice(0, 255) : "";
   const email = typeof body.email === "string" ? body.email.slice(0, 255) : "";
   const idemKey =
@@ -104,13 +145,13 @@ ordersRoutes.post("/v1/shop/orders", requireAuthOptional(), async (c) => {
 
     // 价格行：多规格按 code 精确取，单规格取默认 '0' 行
     const skuRow = await client.query(
-      `SELECT code, sku, market_price, user_price, guest_price FROM gq_skus
+      `SELECT code, sku, market_price, user_price, guest_price, cost_price FROM gq_skus
        WHERE goods_id = $1 AND ($2::varchar IS NULL OR code = $2::varchar OR sku = $2::varchar)
        ORDER BY (code = $2::varchar) DESC NULLS LAST, (sku = '0') DESC
        LIMIT 1`,
       [goodsId, skuCode],
     );
-    const sku = skuRow.rows[0] as { code: string | null; sku: string; market_price: number | null; user_price: number | null; guest_price: number | null } | undefined;
+    const sku = skuRow.rows[0] as { code: string | null; sku: string; market_price: number | null; user_price: number | null; guest_price: number | null; cost_price: number | null } | undefined;
     if (!sku) throw Object.assign(new Error("sku not found"), { http: 404 as const });
 
     // 分店归属（M3 D5）：body.station_slug 解析激活分店（默认 0 主站）；station 供加价/停用校验
@@ -140,16 +181,22 @@ ordersRoutes.post("/v1/shop/orders", requireAuthOptional(), async (c) => {
     const userLevel = levelActive ? rawLevel : 0;
     const isRegistered = (c.get("uid") ?? 0) > 0; // 注册普通用户吃 user_price，游客只吃 guest（上游 level==-1 语义）
     let unit: number;
+    let memberOverride = false;
     if (userLevel > 0) {
       const mp = await client.query(
         `SELECT price FROM gq_member_price WHERE goods_id = $1 AND sku = $2 AND member_level = $3 LIMIT 1`,
         [goodsId, sku.sku, userLevel],
       );
       // 会员：mp 覆盖 > user_price > guest（M7 C2 对齐 Level_Price::calculate）
+      memberOverride = !!mp.rows[0];
       unit = mp.rows[0] ? Number(mp.rows[0].price) : unitPriceCents(sku, true);
     } else {
       unit = unitPriceCents(sku, isRegistered);
     }
+    // 功能池④：高级定价层（默认全关）——single 压过会员价；成本规则仅替代常规链基价
+    const adv = await readAdvancedPriceOpts(pool);
+    if (adv.singleCents > 0) unit = adv.singleCents;
+    else if (!memberOverride) unit = costBasedUnitCents(sku.cost_price, adv) ?? unit;
     if (unit <= 0) throw Object.assign(new Error("price not set"), { http: 400 as const });
     const total = calcTotalCents(unit, quantity);
 
@@ -221,6 +268,8 @@ ordersRoutes.post("/v1/shop/orders", requireAuthOptional(), async (c) => {
     );
 
     await client.query("COMMIT");
+    // v1.2.0：下单成功事件（事务外派发，插件通知失败不影响下单）
+    await bus.emit("order:created", { orderId, outTradeNo, userId: c.get("uid") ?? 0, amountCents });
     return c.json(
       { code: 0, msg: "ok", data: { out_trade_no: outTradeNo, amount: amountCents, goods: goods.title, quantity } },
       201,

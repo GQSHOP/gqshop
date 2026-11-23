@@ -30,11 +30,16 @@ interface Sku {
   sku: string;
   guest_price: number | null;
   market_price: number | null;
+  eff_price?: number | null;
   stock: number | null;
 }
 interface GoodsDetail extends GoodsCard {
   content: string | null;
   skus: Sku[];
+  has_password?: boolean;
+  has_pay_content?: boolean;
+  bought_password?: string | null;
+  pay_content?: string | null;
 }
 
 function fen(y: string | number | null | undefined): string {
@@ -131,7 +136,7 @@ function Goods() {
           <select value={sku} onChange={(e) => setSku(e.target.value)}>
             {g.skus.map((s) => (
               <option key={s.sku} value={s.sku}>
-                {s.sku}（¥{fen(s.guest_price ?? s.market_price)}）
+                {s.sku}（¥{fen(s.eff_price ?? s.guest_price ?? s.market_price)}）
               </option>
             ))}
           </select>
@@ -144,6 +149,27 @@ function Goods() {
         {msg && <div className="msg">{msg}</div>}
       </div>
       {g.content && <div className="card" dangerouslySetInnerHTML={{ __html: g.content }} />}
+      {(g.has_password || g.has_pay_content) && (
+        <div className="card">
+          {g.has_password &&
+            (g.bought_password ? (
+              <p>
+                🔑 密码（已购买）：<strong>{g.bought_password}</strong>
+              </p>
+            ) : (
+              <p>🔒 本商品附带密码，购买并登录后可查看</p>
+            ))}
+          {g.has_pay_content &&
+            (g.pay_content ? (
+              <div>
+                💎 付费内容（已购买）：
+                <div dangerouslySetInnerHTML={{ __html: g.pay_content }} />
+              </div>
+            ) : (
+              <p>🔒 付费内容，购买并登录后可见</p>
+            ))}
+        </div>
+      )}
     </main>
   );
 }

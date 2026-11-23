@@ -1,0 +1,49 @@
+# GQSHOP prod compose (server) — 与 staging 完全隔离：独立库/独立密钥/无 mock/无 ADMIN_KEY
+# Usage on server: cd /opt/gqshop/prod && docker compose -f docker-compose.prod.yml up -d --build
+# 首次安装（建库+founder admin）：
+#   docker exec gqshop-core-prod sh -c \
+#     'cd /repo/apps/core && GQSHOP_INSTALL_ADMIN_USER=admin GQSHOP_INSTALL_ADMIN_PASSWORD=*** tsx src/install-cli.ts'
+services:
+  core:
+    build:
+      context: ./src
+      dockerfile: Dockerfile
+    container_name: gqshop-core-prod
+    restart: unless-stopped
+    environment:
+      GQSHOP_DB_HOST: gqshop-pg
+      GQSHOP_DB_PORT: 5432
+      GQSHOP_DB_USER: ${GQSHOP_DB_USER} # 专用角色 gqshop_prod（非超级用户）
+      GQSHOP_DB_PASSWORD: ${GQSHOP_DB_PASSWORD}
+      GQSHOP_DB_NAME: gqshop_prod
+      GQSHOP_JWT_SECRET: ${GQSHOP_JWT_SECRET} # 与 staging 各自独立
+      GQSHOP_PAY_MOCK: "0" # 生产禁用模拟支付（硬编码，不读 env）
+      GQSHOP_STATIC_DIR: /repo/templates/default/dist
+      GQSHOP_TEMPLATES_ROOT: /repo/templates
+      GQSHOP_ADMIN_STATIC_DIR: /repo/apps/admin/dist
+      GQSHOP_USER_STATIC_DIR: /repo/apps/user/dist
+      GQSHOP_UPLOAD_DIR: /repo/data/uploads
+      GQSHOP_MARKET_DIR: ${GQSHOP_MARKET_DIR:-/repo/data/market}
+      GQSHOP_MARKET_URL: ${GQSHOP_MARKET_URL:-}
+      GQSHOP_PLUGINS_DIR: /repo/data/plugins
+      GQSHOP_MARKET_PUBKEY: ${GQSHOP_MARKET_PUBKEY:-}
+      GQSHOP_LICENSE_PUBKEY: ${GQSHOP_LICENSE_PUBKEY:-} # β：付费插件 license 验签公钥
+      GQSHOP_LICENSES_DIR: /repo/data/licenses
+      GQSHOP_EPAY_API: ${GQSHOP_EPAY_API:-}
+      GQSHOP_EPAY_PID: ${GQSHOP_EPAY_PID:-}
+      GQSHOP_EPAY_KEY: ${GQSHOP_EPAY_KEY:-}
+      GQSHOP_PUBLIC_BASE: ${GQSHOP_PUBLIC_BASE:-}
+      GQSHOP_PORT: 8100
+      NODE_ENV: production
+    ports:
+      - "127.0.0.1:8101:8100" # 仅 nginx 反代可达
+    volumes:
+      - /opt/gqshop/prod/data/uploads:/repo/data/uploads
+      - /opt/gqshop/prod/data/plugins:/repo/data/plugins
+      - /opt/gqshop/prod/data/licenses:/repo/data/licenses
+      - /opt/gqshop/data/market:/repo/data/market:ro
+    networks: [gqshop_net]
+
+networks:
+  gqshop_net:
+    external: true

@@ -128,6 +128,8 @@ aftersaleRoutes.post("/v1/user/aftersale", requireAuth(), async (c) => {
      VALUES ($1, $2, $3, $4, 'user', $5, $6)`,
     [aftersaleId, order.id, items.rows[0]?.id ?? 0, no, reason, Math.floor(Date.now() / 1000)],
   );
+  // v1.2.0：售后创建事件（插件通知：邮件/webhook）
+  await bus.emit("aftersale:created", { aftersaleId, orderId: order.id });
   return c.json({ code: 0, msg: "submitted", data: { aftersale_id: aftersaleId } }, 201);
 });
 

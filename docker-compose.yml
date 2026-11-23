@@ -46,7 +46,7 @@ services:
       GQSHOP_DB_PASSWORD: ${GQSHOP_DEV_PG_PASSWORD:-gqshop_dev}
       GQSHOP_DB_NAME: gqshop
       GQSHOP_JWT_SECRET: ${GQSHOP_DEV_JWT_SECRET:-dev-only-change-me}
-      GQSHOP_ADMIN_KEY: ${GQSHOP_DEV_ADMIN_KEY:?请在 .env 设置 GQSHOP_DEV_ADMIN_KEY（后台机器通道密钥）}
+      GQSHOP_ADMIN_KEY: ${GQSHOP_DEV_ADMIN_KEY:-dev-mock-pay-key} # v1.1.1 起仅用于 /v1/pay/mock/confirm（本地模拟支付）
       GQSHOP_TEMPLATES_ROOT: /repo/templates
       GQSHOP_PORT: 8100
       NODE_ENV: production

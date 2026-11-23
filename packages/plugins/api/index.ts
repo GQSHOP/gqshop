@@ -105,6 +105,33 @@ export interface PluginRoute {
   handler: (c: never) => Promise<Response> | Response;
 }
 
+// ============ 仪表盘卡片（v1.2.0 运营插件批次） ============
+
+/** 卡片数据的三种泛化形态（admin SPA 按 type 渲染，插件不注入前端代码）。 */
+export type DashboardCardData =
+  | { type: "stats"; items: Array<{ label: string; value: string | number }> }
+  | { type: "list"; columns: string[]; rows: Array<Array<string | number>> }
+  | { type: "text"; text: string };
+
+/** 仪表盘卡片注册项：load 每次请求卡片端点时调用（不缓存，数据保持新鲜）。 */
+export interface DashboardCardEntry {
+  /** 卡片唯一 id（同插件内唯一） */
+  id: string;
+  title: string;
+  /** 额外权限位（默认 dashboard.view；如 order.view） */
+  perm?: string;
+  load: (query: QueryExecutor) => Promise<DashboardCardData>;
+}
+
+/** 插件配置字段描述（admin 插件页据此渲染配置表单；存储为 gq_options 的 JSON blob）。 */
+export interface PluginConfigField {
+  key: string;
+  label: string;
+  type: "string" | "password" | "number" | "boolean";
+  placeholder?: string;
+  hint?: string;
+}
+
 export interface PluginContext {
   bus: PluginBus;
   log: (msg: string) => void;
@@ -118,6 +145,8 @@ export interface PluginContext {
   registerPayPlugin: (entry: PayPluginEntry) => void;
   /** 自定义 HTTP 路由（M6-γ）：装配期由 core 挂载；path 须以 / 开头 */
   registerRoute: (route: PluginRoute) => void;
+  /** 仪表盘卡片（v1.2.0）：GET /v1/admin/dashboard/cards 聚合渲染 */
+  registerDashboardCard: (entry: DashboardCardEntry) => void;
   /** 受控 SQL 执行器（同事务/池由宿主在调用点传入，插件不持有长连接） */
   query: QueryExecutor;
 }
@@ -126,6 +155,8 @@ export interface PluginDef {
   name: string;
   version: string;
   description?: string;
+  /** 配置表单描述（v1.2.0）：admin 经 /v1/admin/plugins/:name/config 读写 JSON blob */
+  configSchema?: PluginConfigField[];
   activate: (ctx: PluginContext) => void | Promise<void>;
   deactivate?: (ctx: PluginContext) => void | Promise<void>;
 }

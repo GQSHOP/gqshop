@@ -20,6 +20,7 @@
 导出会在公开仓库生成 MIRROR.md（镜像来源 commit 说明）。
 """
 import argparse
+import datetime
 import io
 import os
 import shutil
@@ -90,7 +91,7 @@ for root, dirs, files in os.walk(tmp):
 # 4. MIRROR 说明
 io.open(os.path.join(pub, "MIRROR.md"), "w", encoding="utf-8").write(
     f"# 镜像说明\n\n本仓库内容镜像自私有 monorepo commit `{sha}`（开源子集，见 ADR-002/C2）。\n"
-    f"导出时间：2026-11-22。源码许可：AGPL-3.0（见 LICENSE）。\n"
+    f"导出时间：{datetime.date.today().isoformat()}。源码许可：AGPL-3.0（见 LICENSE）。\n"
 )
 
 # 5. 提交（--execute 才推送）

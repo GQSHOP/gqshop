@@ -114,6 +114,14 @@ export default function OrderResult({ payMode = false }: { payMode?: boolean }) 
           </>
         )}
 
+        {paid && order.items.some((it) => it.goods_id) && (
+          <p className="hint">
+            若本商品附带密码或付费内容，可回到{" "}
+            <a href={`/goods/${order.items[0]?.goods_id ?? ""}`}>商品页</a>{" "}
+            查看（需以购买账号 <a href="/user/login">登录</a>）。
+          </p>
+        )}
+
         <p className="hint">
           凭订单号 <strong>{order.order.out_trade_no}</strong> 或联系信息可随时{" "}
           <a href="/query">查询订单</a>

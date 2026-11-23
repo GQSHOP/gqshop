@@ -1,0 +1,36 @@
+# GQSHOP 市场站服务（ADR-012 α）——license.sc9.top /api/，nginx /repo 静态分发不变
+# Usage on server: cd /opt/gqshop/license && docker compose -f docker-compose.license.yml up -d --build
+# 表结构：psql -d gqshop_market -f apps/license/src/schema.sql（幂等，部署时执行一次）
+services:
+  license:
+    build:
+      context: ./src
+      dockerfile: apps/license/Dockerfile
+    container_name: gqshop-license
+    restart: unless-stopped
+    environment:
+      GQSHOP_MARKET_DB_HOST: gqshop-pg
+      GQSHOP_MARKET_DB_PORT: 5432
+      GQSHOP_MARKET_DB_USER: ${GQSHOP_MARKET_DB_USER} # 专用角色 gqshop_market（非超级用户）
+      GQSHOP_MARKET_DB_PASSWORD: ${GQSHOP_MARKET_DB_PASSWORD}
+      GQSHOP_MARKET_DB_NAME: gqshop_market
+      GQSHOP_LICENSE_JWT_SECRET: ${GQSHOP_LICENSE_JWT_SECRET} # 独立于 core 的 JWT 密钥
+      GQSHOP_MARKET_DIR: /srv/data/market # 发布物=nginx /repo 同源目录
+      GQSHOP_MARKET_PUBLIC_BASE: ${GQSHOP_MARKET_PUBLIC_BASE:-https://license.sc9.top}
+      GQSHOP_MARKET_EPAY_API: ${GQSHOP_MARKET_EPAY_API:-}
+      GQSHOP_MARKET_EPAY_PID: ${GQSHOP_MARKET_EPAY_PID:-}
+      GQSHOP_MARKET_EPAY_KEY: ${GQSHOP_MARKET_EPAY_KEY:-}
+      GQSHOP_MARKET_SVIP_PRICE_CENTS: ${GQSHOP_MARKET_SVIP_PRICE_CENTS:-9900}
+      GQSHOP_SUBMISSIONS_DIR: /srv/data/submissions
+    ports:
+      - "127.0.0.1:8102:8102" # 仅 nginx 反代可达
+    volumes:
+      - /opt/gqshop/data/market:/srv/data/market # rw：签包落盘+index 再生（原子写）
+      - /opt/gqshop/license/data/submissions:/srv/data/submissions
+      - /opt/gqshop/license/secrets/market-signing.pem:/srv/secrets/market-signing.pem:ro # 市场签名私钥（宿主 600）
+      - /opt/gqshop/license/secrets/license-signing.pem:/srv/secrets/license-signing.pem:ro # β：license 签发私钥（独立钥对）
+    networks: [gqshop_net]
+
+networks:
+  gqshop_net:
+    external: true

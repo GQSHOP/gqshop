@@ -219,7 +219,8 @@ payRoutes.post("/v1/shop/orders/:no/pay-balance", async (c) => {
   }
 });
 
-/** mock 网关（仅 GQSHOP_PAY_MOCK=1 的 staging）：模拟网关回调成功。 */
+/** mock 网关（仅 GQSHOP_PAY_MOCK=1 的 staging）：模拟网关回调成功。
+ *  v1.1.1 后全局机器通道已删，此端点是 X-Admin-Key 的仅存消费者（prod 不设 GQSHOP_ADMIN_KEY，恒 404+403）。 */
 payRoutes.post("/v1/pay/mock/confirm", async (c) => {
   if (process.env.GQSHOP_PAY_MOCK !== "1") {
     return c.json({ code: 404, msg: "mock disabled" }, 404);

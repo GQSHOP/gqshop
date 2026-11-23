@@ -1,0 +1,6 @@
+{
+  "name": "seo_sitemap",
+  "version": "1.0.1",
+  "description": "SEO 基建：自动生成 /sitemap.xml（商品+博客，最多 1000 条）与 /robots.txt，搜索引擎收录即挂即得",
+  "entry": "index.js"
+}

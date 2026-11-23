@@ -5,10 +5,11 @@
  * 携带 premium/custom_name 供前端展示分店价。
  */
 import { Hono } from "hono";
-import { and, desc, eq, ilike, isNull, min } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, isNull, min, sql } from "drizzle-orm";
 
 import { goodsTable, skusTable } from "@gqshop/db";
-import { requireAuthOptional, getOption } from "@gqshop/kernel";
+import { requireAuthOptional, getOption, costBasedUnitCents } from "@gqshop/kernel";
+import { readAdvancedPriceOpts } from "./pricing.js";
 import type { AppEnv, StationContext } from "@gqshop/kernel";
 
 export const goodsRoutes = new Hono<AppEnv>();
@@ -43,6 +44,7 @@ interface SkuRow {
   sku: string;
   market_price: number | null;
   guest_price: number | null;
+  cost_price: number | null;
   stock: number | null;
   sales: number | null;
   post_url: string | null;
@@ -127,33 +129,50 @@ goodsRoutes.get("/v1/shop/goods", async (c) => {
       maps.set(m.goods_id, m);
     }
   }
-  const enriched = await Promise.all(
-    (station ? goods.filter((g) => {
-      const m = maps.get(g.id);
-      if (m?.is_show === "n") return false; // 显式隐藏
-      if (!m && station.master_goods !== 1) return false; // 未映射且非全同步
-      return true;
-    }) : goods).map(async (g) => {
-      const r = await pool.query(
-        `SELECT MIN(COALESCE(guest_price, market_price)) AS min_price
-         FROM gq_skus WHERE goods_id = $1`,
-        [g.id],
-      );
-      const m = maps.get(g.id);
-      const minPrice = r.rows[0]?.min_price ?? null;
-      // 分店价 = 主站价 × (1 + premium%)（展示层，下单以 orders.ts 计算为准）
-      const pct = m?.premium !== null && m?.premium !== undefined ? Number(m.premium) : null;
-      const stationPrice = pct && pct > 0 && minPrice !== null
-        ? Math.round(Number(minPrice) * (1 + pct / 100))
-        : minPrice;
-      return {
-        ...g,
-        title: m?.custom_name || g.title,
-        min_price: station ? stationPrice : minPrice,
-        station_premium: m?.premium ?? null,
-      };
-    }),
-  );
+  // min_price 批量聚合（功能池①：原每商品一条 MIN 查询的 N+1 → 一次 inArray 聚合）
+  const visible = station
+    ? goods.filter((g) => {
+        const m = maps.get(g.id);
+        if (m?.is_show === "n") return false; // 显式隐藏
+        if (!m && station.master_goods !== 1) return false; // 未映射且非全同步
+        return true;
+      })
+    : goods;
+  const minpMap = new Map<number, number | null>();
+  if (visible.length > 0) {
+    // 功能池④：高级定价层感知的最低价（规则未启用时=常规 COALESCE，与下单侧同规则）
+    const adv = await readAdvancedPriceOpts(pool);
+    const baseExpr = sql`COALESCE(${skusTable.guest_price}, ${skusTable.market_price})`;
+    const effExpr =
+      adv.singleCents > 0
+        ? sql`${adv.singleCents}::int`
+        : sql`CASE
+             WHEN ${skusTable.cost_price} > 0 AND ${adv.profitCents} > 0 THEN ${skusTable.cost_price} + ${adv.profitCents}
+             WHEN ${skusTable.cost_price} > 0 AND ${adv.markupPercent} > 0 THEN round(${skusTable.cost_price} * (1 + ${adv.markupPercent}::numeric / 100))
+             ELSE ${baseExpr}
+           END`;
+    const minps = await db
+      .select({ goodsId: skusTable.goods_id, minp: min(effExpr) })
+      .from(skusTable)
+      .where(inArray(skusTable.goods_id, visible.map((g) => g.id)))
+      .groupBy(skusTable.goods_id);
+    for (const r of minps) minpMap.set(r.goodsId, r.minp === null ? null : Number(r.minp));
+  }
+  const enriched = visible.map((g) => {
+    const m = maps.get(g.id);
+    const minPrice = minpMap.has(g.id) ? minpMap.get(g.id) : null;
+    // 分店价 = 主站价 × (1 + premium%)（展示层，下单以 orders.ts 计算为准）
+    const pct = m?.premium !== null && m?.premium !== undefined ? Number(m.premium) : null;
+    const stationPrice = pct && pct > 0 && minPrice !== null
+      ? Math.round(Number(minPrice) * (1 + pct / 100))
+      : minPrice;
+    return {
+      ...g,
+      title: m?.custom_name || g.title,
+      min_price: station ? stationPrice : minPrice,
+      station_premium: m?.premium ?? null,
+    };
+  });
   return c.json({ code: 0, data: { list: enriched, page, limit, station: station ? { id: station.id, name: station.name, title: station.title, slug: station.slug, logo: station.logo, roll_notice: station.roll_notice, home_notice: station.home_notice } : null } });
 });
 
@@ -183,29 +202,49 @@ goodsRoutes.get("/v1/shop/goods/:id", requireAuthOptional(), async (c) => {
   if (goods.is_on_shelf !== 1) return c.json({ code: 403, msg: "goods off shelf" }, 403);
 
   // 审查修复 H3：password 只暴露"是否有密码"；pay_content（付费可见内容）仅已支付
-  // 该商品的用户可见——防止凭商品 id 直接从 API 拿到密码/付费内容
+  // 该商品的用户可见——防止凭商品 id 直接从 API 拿到密码/付费内容。
+  // 功能池②：已购用户同时放行 password（密码商品=购买后在商品页查看密码）
   const hasPassword = !!goods.password;
   let payContent: string | null = null;
+  let boughtPassword: string | null = null;
   const uid = c.get("uid") ?? 0;
-  if (goods.pay_content && uid > 0) {
+  if ((goods.pay_content || goods.password) && uid > 0) {
     const bought = await pool.query(
       `SELECT 1 FROM gq_order o JOIN gq_order_list ol ON ol.order_id = o.id
        WHERE o.user_id = $1 AND ol.goods_id = $2 AND o.pay_status = 1 LIMIT 1`,
       [uid, id],
     );
-    if (bought.rows.length > 0) payContent = goods.pay_content;
+    if (bought.rows.length > 0) {
+      payContent = goods.pay_content;
+      boughtPassword = goods.password;
+    }
   }
-  const safeGoods = { ...goods, password: undefined, pay_content: payContent };
+  const safeGoods = {
+    ...goods,
+    password: undefined,
+    pay_content: payContent,
+    bought_password: boughtPassword, // 已购才非空；未购=null（不泄露是否设了密码值之外的信息）
+    has_pay_content: !!goods.pay_content, // 前端锁定占位用（不泄露内容本身）
+  };
 
   const skus = await pool.query<SkuRow>(
-    `SELECT code, sku, market_price, guest_price, stock, sales, post_url
+    `SELECT code, sku, market_price, guest_price, cost_price, stock, sales, post_url
      FROM gq_skus WHERE goods_id = $1 ORDER BY code ASC NULLS LAST`,
     [id],
   );
+  // 功能池④：展示价=规则感知基价（与下单侧同规则；会员价展示本就不在详情基价内）
+  const adv = await readAdvancedPriceOpts(pool);
+  const skuRows = skus.rows.map((s) => ({
+    ...s,
+    eff_price:
+      adv.singleCents > 0
+        ? adv.singleCents
+        : costBasedUnitCents(s.cost_price ?? null, adv) ?? Number(s.guest_price ?? s.market_price ?? 0),
+  }));
   // 批量优惠规则（M2）：随详情下发供店面展示"满 X 件优惠"提示
   const discounts = await pool.query(
     `SELECT sku, quantity, amount, type FROM gq_discount WHERE goods_id = $1 ORDER BY quantity ASC`,
     [id],
   );
-  return c.json({ code: 0, data: { ...safeGoods, has_password: hasPassword, skus: skus.rows, discounts: discounts.rows } });
+  return c.json({ code: 0, data: { ...safeGoods, has_password: hasPassword, skus: skuRows, discounts: discounts.rows } });
 });

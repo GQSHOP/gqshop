@@ -1,0 +1,16 @@
+{
+  "name": "@gqshop/plugin-stock-alert",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "内置插件：库存告警 webhook（stock:low → HMAC-SHA256 签名 POST + 去抖）",
+  "main": "index.ts",
+  "types": "index.ts",
+  "dependencies": {
+    "@gqshop/plugin-api": "workspace:*",
+    "@gqshop/kernel": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.0"
+  }
+}

@@ -12,6 +12,7 @@ export * from "./admin-files.js";
 export * from "./admin-groups.js";
 export * from "./admin-templates.js";
 export * from "./admin-plugins.js";
+export * from "./admin-dashboard.js";
 export * from "./i18n.js";
 export * from "./station-resolver.js";
 export * from "./shipping-registry.js";

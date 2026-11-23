@@ -6,7 +6,7 @@
  */
 import type { Pool, PoolClient } from "pg";
 
-import { getGoodsTypeHandler } from "@gqshop/kernel";
+import { getGoodsTypeHandler, bus } from "@gqshop/kernel";
 
 export type QueryExecutor = PoolClient | Pool;
 
@@ -30,7 +30,11 @@ export async function deliverOrderItem(
   const handler = getGoodsTypeHandler(goodsType);
   if (handler) {
     const r = await handler(executor as never, orderId, item);
-    if (!r.delivered) return r;
+    if (!r.delivered) {
+      // v1.2.0：插件 handler 发货失败（缺卡/异常）→ 事件（实物待人工/未知类型不走此分支）
+      await bus.emit("deliver:failed", { orderId, goodsType, error: r.error ?? "unknown" });
+      return r;
+    }
     // 交付留痕（与插件 handler 同 executor=同事务）
     await executor.query(
       `INSERT INTO gq_deliver (order_id, order_list_id, content, create_time) VALUES ($1, $2, $3, $4)`,
@@ -42,5 +46,8 @@ export async function deliverOrderItem(
     // 实物不自动发货（ADR-005 P3）：发货单由 createPhysicalSale 建，物流由 admin 推进
     return { delivered: false, contents: [], error: "physical: awaiting manual shipment" };
   }
-  return { delivered: false, contents: [], error: `unknown goods type: ${goodsType}` };
+  // v1.2.0：未知类型=真失败 → 事件
+  const err = `unknown goods type: ${goodsType}`;
+  await bus.emit("deliver:failed", { orderId, goodsType, error: err });
+  return { delivered: false, contents: [], error: err };
 }

@@ -10,6 +10,7 @@ import type { Pool } from "pg";
 
 import {
   PluginBus,
+  type DashboardCardEntry,
   type GoodsTypeEntry,
   type PayPluginEntry,
   type PluginDef,
@@ -21,14 +22,21 @@ import goodsGeneral from "@gqshop/plugin-goods-general";
 import goodsService from "@gqshop/plugin-goods-service";
 import payEpay from "@gqshop/plugin-pay-epay";
 import payBalance from "@gqshop/plugin-pay-balance";
+import notifyEmail from "@gqshop/plugin-notify-email";
+import stockAlert from "@gqshop/plugin-stock-alert";
+import dashboardCardsPlugin from "@gqshop/plugin-dashboard-cards";
 
 export const bus = new PluginBus();
 const goodsTypes = new Map<string, { plugin: string; entry: GoodsTypeEntry }>();
 const payPlugins = new Map<string, { plugin: string; entry: PayPluginEntry }>();
 const pluginRoutes = new Map<string, PluginRoute>(); // key: `${method} ${path}`
+const dashboardCards = new Map<string, { plugin: string; entry: DashboardCardEntry }>(); // key: `${plugin}:${id}`
 const activated = new Map<string, PluginDef>();
 
-export const BUILTIN_PLUGINS: PluginDef[] = [goodsOnce, goodsGeneral, goodsService, payEpay, payBalance];
+export const BUILTIN_PLUGINS: PluginDef[] = [
+  goodsOnce, goodsGeneral, goodsService, payEpay, payBalance,
+  notifyEmail, stockAlert, dashboardCardsPlugin,
+];
 
 async function optionGet(pool: Pool, name: string): Promise<string | null> {
   const r = await pool.query<{ option_value: string }>(
@@ -39,7 +47,7 @@ async function optionGet(pool: Pool, name: string): Promise<string | null> {
 }
 
 /** 受控执行器包装（仅类型收窄，无额外能力）。 */
-function executorOf(pool: Pool): QueryExecutor {
+export function executorOf(pool: Pool): QueryExecutor {
   return {
     query: (async (sql: string, params?: unknown[]) => pool.query(sql, params)) as QueryExecutor["query"],
   };
@@ -62,6 +70,11 @@ export function isValidPayPlugin(name: string): boolean {
   return payPlugins.has(name);
 }
 
+/** 支付方式名 → 提供插件名（分店级插件白名单判定用；未注册返回 null）。 */
+export function payPluginProvider(name: string): string | null {
+  return payPlugins.get(name)?.plugin ?? null;
+}
+
 /** 启动加载（main.ts 调用，种子后）。返回激活清单供日志与 admin 端点。 */
 export async function loadPlugins(pool: Pool): Promise<{ loaded: string[]; skipped: string[] }> {
   const raw = await optionGet(pool, "active_plugins");
@@ -77,6 +90,7 @@ export async function loadPlugins(pool: Pool): Promise<{ loaded: string[]; skipp
   const loaded: string[] = [];
   const skipped: string[] = [];
   pluginRoutes.clear(); // 重启即重注册（loadPlugins 幂等）
+  dashboardCards.clear();
   const activateOne = async (def: PluginDef) => {
     const ctx = {
       bus,
@@ -97,6 +111,7 @@ export async function loadPlugins(pool: Pool): Promise<{ loaded: string[]; skipp
         if (!route.path.startsWith("/")) return;
         pluginRoutes.set(`${route.method} ${route.path}`, { ...route });
       },
+      registerDashboardCard: (entry: DashboardCardEntry) => dashboardCards.set(`${def.name}:${entry.id}`, { plugin: def.name, entry }),
       query: executorOf(pool),
     };
     await def.activate(ctx);
@@ -155,7 +170,22 @@ export function pluginOverview(): { builtin: string[]; activated: string[] } {
   };
 }
 
+/** 按名取已激活插件定义（含市场安装的外部插件；未激活返回 undefined）。 */
+export function activatedDef(name: string): PluginDef | undefined {
+  return activated.get(name);
+}
+
+/** 市场安装且当前激活的外部插件（非内置）清单。 */
+export function externalActivatedPlugins(): PluginDef[] {
+  return [...activated.values()].filter((d) => !BUILTIN_PLUGINS.some((b) => b.name === d.name));
+}
+
 /** 插件自定义路由（M6-γ：core 装配期挂载）。 */
 export function registeredPluginRoutes(): PluginRoute[] {
   return [...pluginRoutes.values()];
+}
+
+/** 已注册仪表盘卡片（v1.2.0：admin-dashboard 端点聚合调用）。 */
+export function listDashboardCards(): Array<DashboardCardEntry & { plugin: string }> {
+  return [...dashboardCards.values()].map((h) => ({ ...h.entry, plugin: h.plugin }));
 }

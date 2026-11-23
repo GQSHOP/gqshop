@@ -60,7 +60,7 @@ export default function GoodsDetailPage() {
     const pick = skuCode
       ? goods.skus.find((s) => s.code === skuCode) ?? goods.skus[0]
       : goods.skus[0];
-    return Number(pick?.guest_price ?? pick?.market_price ?? 0);
+    return Number(pick?.eff_price ?? pick?.guest_price ?? pick?.market_price ?? 0);
   }, [goods, skuCode]);
 
   const multiSkus = useMemo(() => goods?.skus.filter((s) => s.sku !== "0") ?? [], [goods]);
@@ -272,6 +272,36 @@ export default function GoodsDetailPage() {
           <span className="goods-detail-title">商品详情</span>
         </div>
         <div className="goods-detail-body" dangerouslySetInnerHTML={{ __html: goods.content ?? "" }} />
+
+        {/* 功能池②：密码商品/付费内容（已购解锁，未购锁定占位） */}
+        {goods.has_password && (
+          <div className="goods-detail-body" style={{ marginTop: 12 }}>
+            {goods.bought_password ? (
+              <div style={{ padding: "12px 16px", border: "1px solid #e5e7eb", borderRadius: 8, background: "#f8fafc" }}>
+                <div style={{ fontWeight: 700, marginBottom: 6 }}>🔑 本商品密码（已购买）</div>
+                <div className="mono" style={{ fontSize: 15, wordBreak: "break-all" }}>{goods.bought_password}</div>
+              </div>
+            ) : (
+              <div style={{ padding: "12px 16px", border: "1px dashed #d1d5db", borderRadius: 8, color: "#6b7280" }}>
+                🔒 本商品附带密码，购买并登录后在此查看
+              </div>
+            )}
+          </div>
+        )}
+        {goods.has_pay_content && (
+          <div className="goods-detail-body" style={{ marginTop: 12 }}>
+            {goods.pay_content ? (
+              <div style={{ padding: "12px 16px", border: "1px solid #e5e7eb", borderRadius: 8, background: "#f8fafc" }}>
+                <div style={{ fontWeight: 700, marginBottom: 6 }}>💎 付费内容（已购买）</div>
+                <div dangerouslySetInnerHTML={{ __html: goods.pay_content }} />
+              </div>
+            ) : (
+              <div style={{ padding: "12px 16px", border: "1px dashed #d1d5db", borderRadius: 8, color: "#6b7280" }}>
+                🔒 付费内容，购买并登录后可见
+              </div>
+            )}
+          </div>
+        )}
       </section>
     </main>
   );

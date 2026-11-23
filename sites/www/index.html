@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GQSHOP 搞钱商城 — 自部署开源电商系统</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,'PingFang SC',sans-serif;background:#fff;color:#222}
+.nav{max-width:1080px;margin:0 auto;padding:18px 20px;display:flex;align-items:center;gap:24px}
+.nav .logo{font-weight:800;font-size:20px;color:#1560e8}
+.nav a{color:#555;text-decoration:none;font-size:14px}
+.nav a:hover{color:#1560e8}
+.nav .cta{margin-left:auto;background:#1b6dff;color:#fff;padding:8px 20px;border-radius:8px;font-size:13px}
+.hero{text-align:center;padding:80px 20px 60px;background:linear-gradient(180deg,#eef4ff 0%,#fff 100%)}
+.hero h1{font-size:40px;margin-bottom:16px;line-height:1.3}
+.hero h1 span{color:#1b6dff}
+.hero p{color:#666;font-size:16px;max-width:600px;margin:0 auto 32px;line-height:1.8}
+.hero .actions a{display:inline-block;margin:0 8px;padding:12px 32px;border-radius:10px;font-size:15px;text-decoration:none}
+.hero .primary{background:#1b6dff;color:#fff}
+.hero .ghost{border:1px solid #d0dbe8;color:#1560e8}
+.features{max-width:1080px;margin:0 auto;padding:40px 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.feat{padding:24px;border-radius:14px;border:1px solid #e8eef5}
+.feat .ic{font-size:28px;margin-bottom:12px}
+.feat h3{font-size:16px;margin-bottom:8px}
+.feat p{color:#666;font-size:13px;line-height:1.7}
+.arch{max-width:1080px;margin:40px auto;padding:0 20px}
+.arch h2{text-align:center;font-size:24px;margin-bottom:24px}
+.arch .layers{display:flex;flex-direction:column;gap:10px;max-width:700px;margin:0 auto}
+.layer{display:flex;align-items:center;gap:16px;padding:16px 24px;border-radius:12px;background:#f5f8fd}
+.layer .tag{flex-shrink:0;width:100px;font-weight:700;font-size:13px;color:#1560e8}
+.layer .body{color:#555;font-size:13px;line-height:1.6}
+.docs{max-width:1080px;margin:40px auto;padding:0 20px}
+.docs h2{text-align:center;font-size:24px;margin-bottom:24px}
+.doc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;max-width:800px;margin:0 auto}
+.doc-card{padding:20px;border-radius:12px;border:1px solid #e8eef5;text-decoration:none;color:#222;display:block}
+.doc-card:hover{border-color:#1b6dff}
+.doc-card h4{font-size:14px;margin-bottom:6px;color:#1560e8}
+.doc-card p{color:#777;font-size:12px;line-height:1.6}
+footer{text-align:center;padding:40px 16px;color:#999;font-size:12px;background:#f5f6f8}
+</style>
+</head>
+<body>
+<div class="nav">
+<div class="logo">GQSHOP</div>
+<a href="#features">功能</a><a href="#arch">架构</a><a href="#docs">文档</a>
+<a href="https://license.sc9.top">应用市场</a>
+<a class="cta" href="https://github.com/GQSHOP/gqshop">GitHub</a>
+</div>
+<section class="hero">
+<h1>自部署开源电商<br><span>虚拟商品 · 卡密 · 会员 · 分店 · 插件生态</span></h1>
+<p>TypeScript + Hono + PostgreSQL 三层架构（内核-域-插件），ed25519 签名分发市场，
+单机 Docker Compose 十分钟启动，从发卡到开分店全流程自营。</p>
+<div class="actions">
+<a class="primary" href="https://github.com/GQSHOP/gqshop">快速部署</a>
+<a class="ghost" href="https://demo.sc9.top">在线演示</a>
+</div>
+</section>
+<section class="features" id="features">
+<div class="feat"><div class="ic">💳</div><h3>交易闭环</h3><p>幂等下单 · 库存原子预留 · 三种卡密自动发货（SKIP LOCKED 原子取卡）· 易支付/余额双通道 · 超时关单与迟到回调恢复</p></div>
+<div class="feat"><div class="ic">👑</div><h3>会员与分销</h3><p>8 档等级价格链（user_price/member_price/过期掉档）· 池递减佣金（还原对齐真算法：起提线/池帽/等级门槛/跳级）· 退款反扣</p></div>
+<div class="feat"><div class="ic">🏪</div><h3>分店多租户</h3><p>5 档等级自助开通 · 独立域名或 /s/slug 双模式 · 分店价格链与即时分成 · 分店自选模板</p></div>
+<div class="feat"><div class="ic">📦</div><h3>实物+博客</h3><p>地址簿 · 运费模板（首件+续件+满额包邮）· 物流发货 · 博客（文章/分类/评论审核/RSS）</p></div>
+<div class="feat"><div class="ic">🔌</div><h3>插件生态</h3><p>进程内插件总线（9 事件+事务透传）· 商品类型/支付通道注册表——新增零改内核 · epay 路由完全插件化</p></div>
+<div class="feat"><div class="ic">🛡️</div><h3>安全基线</h3><p>admin 用户组权限位+会话票 · 登录限流锁定 · SSRF 双栈防线（IPv4/IPv6）· 市场包 sha256+ed25519 双验签</p></div>
+</section>
+<section class="arch" id="arch">
+<h2>三层架构</h2>
+<div class="layers">
+<div class="layer"><div class="tag">装配层</div><div class="body">apps/core 薄壳——路由装配与启动，零业务逻辑</div></div>
+<div class="layer"><div class="tag">内核+域</div><div class="body">packages/kernel（鉴权/事件总线/插件宿主/模板注册表）+ 五域包（trade/wallet/station/content/members），域间零横向依赖（CI 门禁强制）</div></div>
+<div class="layer"><div class="tag">生态层</div><div class="body">插件（支付通道/商品类型/通知）+ 模板（一包一模板）+ 应用市场（签名分发·版本管理·回滚）</div></div>
+</div>
+</section>
+<section class="docs" id="docs">
+<h2>文档</h2>
+<div class="doc-grid">
+<a class="doc-card" href="https://github.com/GQSHOP/gqshop#readme"><h4>快速部署</h4><p>Docker Compose 十分钟启动：克隆 · 配置 .env · 起容器</p></a>
+<a class="doc-card" href="#arch"><h4>插件开发</h4><p>definePlugin / PluginContext 最小 API 面 / registerRoute 自定义路由 / 市场上架签名流</p></a>
+<a class="doc-card" href="#arch"><h4>模板开发</h4><p>templates/{name}/ 一包一模板 · 选择链（分店>全局默认>default）· 多构建产物</p></a>
+<a class="doc-card" href="https://github.com/GQSHOP/gqshop/releases"><h4>更新日志</h4><p>版本历史与 Release 说明</p></a>
+</div>
+</section>
+<footer>© 2026 GQSHOP · AGPL-3.0 · <a href="https://github.com/GQSHOP/gqshop" style="color:#999">github.com/GQSHOP/gqshop</a> · 应用市场 <a href="https://license.sc9.top" style="color:#999">license.sc9.top</a></footer>
+</body>
+</html>

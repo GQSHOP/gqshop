@@ -1,0 +1,6 @@
+{
+  "name": "today_snapshot",
+  "version": "1.0.0",
+  "description": "后台仪表盘「今日快照」卡片：今日订单/支付 GMV/待支付/待处理售后，一卡看当天经营面",
+  "entry": "index.js"
+}

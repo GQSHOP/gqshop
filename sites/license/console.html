@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>开发者控制台 · GQSHOP 应用市场</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,'PingFang SC',sans-serif;background:#f5f6f8;color:#222}
+header{background:linear-gradient(135deg,#1560e8,#1b6dff);color:#fff;padding:20px;display:flex;align-items:center;gap:12px}
+header h1{font-size:18px;flex:1}
+header a{color:#fff;opacity:.85;font-size:13px;text-decoration:none}
+main{max-width:760px;margin:0 auto;padding:24px 16px}
+.section-title{font-size:15px;font-weight:700;margin:18px 0 10px}
+.card{background:#fff;border-radius:12px;padding:18px 20px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+label{display:block;font-size:13px;color:#555;margin:10px 0 4px}
+input[type=text],input[type=email],input[type=password],input[type=file],textarea{width:100%;padding:8px 10px;border:1px solid #d8dde6;border-radius:8px;font-size:13px;font-family:inherit}
+textarea{height:70px;resize:vertical}
+.btn{display:inline-block;padding:8px 20px;border-radius:8px;background:#1b6dff;color:#fff;font-size:13px;border:0;cursor:pointer;margin-top:10px}
+.btn:hover{background:#1560e8}
+.btn-ghost{background:#eef4ff;color:#1b6dff}
+.msg{font-size:13px;margin-top:8px;padding:8px 12px;border-radius:8px;display:none}
+.msg.ok{display:block;background:#e8f7ee;color:#187a46}
+.msg.err{display:block;background:#fdecec;color:#b33a3a}
+table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid #f0f2f5;vertical-align:top}
+th{color:#888;font-weight:600;background:#fafbfc}
+.tag{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px}
+.tag.in_review{background:#fff6e0;color:#a06b00}
+.tag.published{background:#e8f7ee;color:#187a46}
+.tag.rejected{background:#fdecec;color:#b33a3a}
+.muted{color:#999;font-size:12px}
+pre.scan{background:#fafbfc;border:1px solid #f0f2f5;border-radius:8px;padding:8px;font-size:12px;overflow:auto;max-height:160px;margin-top:6px}
+.tabs{display:flex;gap:8px;margin-bottom:4px}
+.tabs button{padding:6px 14px;border-radius:8px;border:0;background:#e6e9ef;font-size:13px;cursor:pointer}
+.tabs button.on{background:#1b6dff;color:#fff}
+</style>
+</head>
+<body>
+<header>
+  <h1>开发者控制台</h1>
+  <a href="/console.html">控制台</a>
+  <a href="/">市场首页</a>
+  <a href="/docs.html">开发者文档</a>
+  <span id="whoami" style="font-size:13px;opacity:.9"></span>
+  <a href="#" id="logout" style="display:none">退出</a>
+</header>
+<main>
+  <div id="msg" class="msg"></div>
+
+  <!-- 未登录 -->
+  <div id="authBox">
+    <div class="tabs">
+      <button id="tabLogin" class="on" onclick="switchTab('login')">登录</button>
+      <button id="tabReg" onclick="switchTab('reg')">注册</button>
+    </div>
+    <div class="card">
+      <div id="loginForm">
+        <label>邮箱</label><input type="email" id="li_email">
+        <label>密码</label><input type="password" id="li_pw">
+        <button class="btn" onclick="doLogin()">登录</button>
+      </div>
+      <div id="regForm" style="display:none">
+        <label>邮箱</label><input type="email" id="rg_email">
+        <label>密码（≥8 位）</label><input type="password" id="rg_pw">
+        <label>昵称</label><input type="text" id="rg_name">
+        <button class="btn" onclick="doRegister()">注册</button>
+        <p class="muted" style="margin-top:8px">首个注册账号自动成为平台管理员</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 付费市场（任意登录账号） -->
+  <div id="marketBox" style="display:none">
+    <div class="section-title">付费插件购买 <button class="btn btn-ghost" style="margin-left:8px" onclick="buySvip()">订阅 SVIP（全站月度）</button></div>
+    <table><thead><tr><th>插件</th><th>最新版</th><th>开发者</th><th>价格</th><th>操作</th></tr></thead><tbody id="mkRows"></tbody></table>
+  </div>
+  <div id="licBox" style="display:none">
+    <div class="section-title">我的授权（license）</div>
+    <table><thead><tr><th>类型</th><th>覆盖</th><th>授权域名</th><th>有效期</th><th>操作</th></tr></thead><tbody id="licRows"></tbody></table>
+    <p class="muted" style="margin-top:8px">安装付费插件：下载 .lic 后，在店铺后台「应用市场 → 该插件 → 导入 license」粘贴文件内容即可。</p>
+  </div>
+
+  <!-- customer：申请开发者 -->
+  <div id="applyBox" style="display:none">    <div class="section-title">申请成为开发者</div>
+    <div class="card">
+      <label>简介（作品/技术背景，≥20 字）</label>
+      <textarea id="ap_intro"></textarea>
+      <button class="btn" onclick="doApply()">提交申请</button>
+      <p class="muted" id="ap_pending" style="display:none;margin-top:8px">申请审核中，请等待平台管理员开通</p>
+    </div>
+  </div>
+
+  <!-- developer/admin：提交 -->
+  <div id="submitBox" style="display:none">
+    <div class="section-title">提交插件版本</div>
+    <div class="card">
+      <label>插件名（^[a-z][a-z0-9_]{2,49}$，先到先得）</label><input type="text" id="sb_name" placeholder="my_plugin">
+      <label>版本（semver 三段式）</label><input type="text" id="sb_ver" placeholder="1.0.0">
+      <label>一句话说明（≤500 字）</label><input type="text" id="sb_desc">
+      <label>插件包 zip（≤2MB：plugin.json + 入口 js）</label><input type="file" id="sb_zip" accept=".zip">
+      <label>定价</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="sb_pmodel" style="padding:8px;border:1px solid #d8dde6;border-radius:8px">
+          <option value="free">免费</option>
+          <option value="onetime">买断（含升级）</option>
+        </select>
+        <input type="text" id="sb_price" placeholder="价格（分），如 990=¥9.90" style="flex:1">
+      </div>
+      <button class="btn" onclick="doSubmit()">提交审核</button>
+      <p class="muted" style="margin-top:8px">自动检查（结构/语法/白名单）通过后进入人工审核；开发者不持有平台签名私钥，发布由平台签发</p>
+    </div>
+    <div class="section-title">我的提交</div>
+    <table><thead><tr><th>插件@版本</th><th>状态</th><th>说明/审核意见</th><th>扫描</th></tr></thead><tbody id="myRows"></tbody></table>
+    <div class="section-title">我的收益（γ：平台抽成后净额）</div>
+    <table><thead><tr><th>订单</th><th>插件</th><th>授权域名</th><th>毛额</th><th>净额</th><th>时间</th></tr></thead><tbody id="earnRows"></tbody></table>
+  </div>
+
+  <!-- admin：审核 -->
+  <div id="adminBox" style="display:none">
+    <div class="section-title">销售总览（γ）</div>
+    <div class="card" id="salesCard">加载中…</div>
+    <p style="margin:6px 0"><a class="btn btn-ghost" href="javascript:exportCsv()">导出结算 CSV（当月）</a></p>
+    <div class="section-title">审核队列（in_review）</div>
+    <table><thead><tr><th>提交</th><th>开发者</th><th>扫描报告</th><th>操作</th></tr></thead><tbody id="qRows"></tbody></table>
+    <div class="section-title">开发者申请</div>
+    <table><thead><tr><th>账号</th><th>简介</th><th>操作</th></tr></thead><tbody id="dRows"></tbody></table>
+    <div class="section-title">授权管理（license）</div>
+    <table><thead><tr><th>#</th><th>类型</th><th>覆盖</th><th>域名</th><th>买家</th><th>状态</th><th>操作</th></tr></thead><tbody id="admLicRows"></tbody></table>
+    <p style="margin:6px 0"><button class="btn btn-ghost" onclick="reissueAll()">重签全部有效 license（钥轮换后）</button></p>
+    <div class="section-title">插件下架</div>
+    <div class="card">
+      <label>插件名（从市场 index 移除全部版本；已装实例不回收）</label>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="un_name" placeholder="plugin_name" style="flex:1">
+        <button class="btn" onclick="unpublish()">下架</button>
+      </div>
+    </div>
+  </div>
+</main>
+<script>
+const API = "/api";
+const $ = (id) => document.getElementById(id);
+let TOKEN = localStorage.getItem("market-token") ?? "";
+let ROLE = "";
+
+function say(ok, text) { const m = $("msg"); m.className = "msg " + (ok ? "ok" : "err"); m.textContent = text; }
+function switchTab(t) {
+  $("tabLogin").className = t === "login" ? "on" : "";
+  $("tabReg").className = t === "reg" ? "on" : "";
+  $("loginForm").style.display = t === "login" ? "" : "none";
+  $("regForm").style.display = t === "reg" ? "" : "none";
+}
+async function api(path, opts) {
+  const r = await fetch(API + path, { ...opts, headers: { ...(opts?.headers ?? {}), ...(TOKEN ? { Authorization: "Bearer " + TOKEN } : {}) } });
+  const b = await r.json().catch(() => ({ code: r.status, msg: "http " + r.status }));
+  if (b.code !== 0) throw new Error(b.msg || ("code " + b.code));
+  return b.data;
+}
+async function refresh() {
+  $("authBox").style.display = TOKEN ? "none" : "";
+  $("logout").style.display = TOKEN ? "" : "none";
+  $("applyBox").style.display = "none"; $("submitBox").style.display = "none"; $("adminBox").style.display = "none";
+  $("marketBox").style.display = "none"; $("licBox").style.display = "none";
+  if (!TOKEN) return;
+  try {
+    const me = await api("/me");
+    ROLE = me.role;
+    $("whoami").textContent = me.email + "（" + me.role + "）";
+    $("marketBox").style.display = "";
+    $("licBox").style.display = "";
+    loadMarket(); loadLicenses();
+    if (me.role === "customer") {
+      $("applyBox").style.display = "";
+      $("ap_pending").style.display = me.dev_pending ? "" : "none";
+    } else {
+      $("submitBox").style.display = "";
+      loadMine(); loadEarnings();
+      if (me.role === "admin") { $("adminBox").style.display = ""; loadQueue(); loadDevs(); loadSales(); loadAdmLicenses(); }
+    }
+  } catch (e) { say(false, e.message); }
+}
+async function loadMarket() {
+  try { const rows = await api("/plugins");
+    $("mkRows").innerHTML = rows.length ? rows.map((p) => "<tr><td><b>" + esc(p.name) + "</b></td><td>" + esc(p.version) + "</td><td>" + esc(p.developer) + "</td><td>" + (p.price_model === "onetime" ? "¥" + (p.price_cents / 100).toFixed(2) + " 买断" : "免费") + "</td><td>" + (p.price_model === "onetime" ? '<button class="btn" onclick="buyPlugin(\'' + esc(p.name) + '\',' + p.price_cents + ')">购买</button>' : '<span class="muted">直接安装</span>') + "</td></tr>").join("") : '<tr><td colspan="5" class="muted">暂无上架插件</td></tr>';
+  } catch (e) { /* 忽略 */ }
+}
+async function buyPlugin(name, cents) {
+  const domain = (prompt("购买 " + name + "（¥" + (cents / 100).toFixed(2) + "）\n输入授权绑定的店铺域名（安装店铺的访问域名，如 demo.sc9.top）：") ?? "").trim().toLowerCase();
+  if (!domain) return;
+  try { const d = await api("/purchase", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ plugin_name: name, domain }) });
+    say(true, "订单已创建（¥" + (d.amount_cents / 100).toFixed(2) + "），正在打开支付页…支付成功后回到此处下载 license");
+    window.open(d.pay_url, "_blank");
+    setTimeout(loadLicenses, 5000);
+  } catch (e) { say(false, e.message); }
+}
+async function buySvip() {
+  const domain = (prompt("订阅 SVIP（按月，全站付费插件随便装）\n输入授权绑定的店铺域名：") ?? "").trim().toLowerCase();
+  if (!domain) return;
+  try { const d = await api("/purchase/svip", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ domain }) });
+    say(true, "SVIP 订单已创建，正在打开支付页…");
+    window.open(d.pay_url, "_blank");
+    setTimeout(loadLicenses, 5000);
+  } catch (e) { say(false, e.message); }
+}
+async function loadLicenses() {
+  try { const rows = await api("/my/licenses");
+    $("licRows").innerHTML = rows.length ? rows.map((l) => "<tr><td>" + (l.license_type === "svip" ? "SVIP" : "插件") + "</td><td>" + esc(l.plugin_name ?? "全站") + "</td><td>" + esc(l.licensee) + "</td><td>" + (l.expires_at ? new Date(Number(l.expires_at) * 1000).toLocaleDateString() : "永久") + "</td><td><a class='btn btn-ghost' href='/api/my/licenses/" + l.id + "/download' target='_blank'>下载 .lic</a></td></tr>").join("") : '<tr><td colspan="5" class="muted">暂无授权</td></tr>';
+  } catch (e) { /* 忽略 */ }
+}
+async function doLogin() {
+  try { const d = await api("/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: $("li_email").value, password: $("li_pw").value }) });
+    TOKEN = d.token; localStorage.setItem("market-token", TOKEN); say(true, "登录成功"); refresh();
+  } catch (e) { say(false, e.message); }
+}
+async function doRegister() {
+  try { const d = await api("/auth/register", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: $("rg_email").value, password: $("rg_pw").value, display_name: $("rg_name").value }) });
+    TOKEN = d.token; localStorage.setItem("market-token", TOKEN); say(true, d.first_admin ? "注册成功——首个账号已自动成为管理员" : "注册成功");
+    refresh();
+  } catch (e) { say(false, e.message); }
+}
+async function doApply() {
+  try { await api("/dev/apply", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ intro: $("ap_intro").value }) });
+    say(true, "申请已提交"); refresh();
+  } catch (e) { say(false, e.message); }
+}
+async function doSubmit() {
+  const f = $("sb_zip").files[0];
+  if (!f) { say(false, "请选择 zip 包"); return; }
+  const fd = new FormData();
+  fd.append("plugin_name", $("sb_name").value.trim());
+  fd.append("version", $("sb_ver").value.trim());
+  fd.append("description", $("sb_desc").value);
+  fd.append("price_model", $("sb_pmodel").value);
+  fd.append("price_cents", $("sb_pmodel").value === "onetime" ? String(Math.floor(Number($("sb_price").value) || 0)) : "0");
+  fd.append("zip", f);
+  try {
+    const d = await api("/dev/submit", { method: "POST", body: fd });
+    say(true, "已提交，等待人工审核");
+  } catch (e) {
+    say(false, e.message);
+    loadMine();
+  }
+}
+const tagOf = (s) => '<span class="tag ' + s + '">' + ({ in_review: "审核中", published: "已发布", rejected: "已拒" }[s] ?? s) + "</span>";
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
+async function loadMine() {
+  try { const rows = await api("/dev/submissions");
+    $("myRows").innerHTML = rows.map((r) => "<tr><td><b>" + esc(r.plugin_name) + "</b>@" + esc(r.version) + "<div class='muted'>" + new Date(Number(r.created_at)).toLocaleString() + "</div></td><td>" + tagOf(r.status) + "</td><td style='max-width:220px'>" + esc(r.review_notes || r.description) + "</td><td><details><summary class='muted'>报告</summary><pre class='scan'>" + esc(r.scan_report) + "</pre></details></td></tr>").join("");
+  } catch (e) { /* 忽略 */ }
+}
+async function loadQueue() {
+  try { const rows = await api("/admin/queue?status=in_review");
+    $("qRows").innerHTML = rows.length ? rows.map((r) => "<tr><td><b>" + esc(r.plugin_name) + "</b>@" + esc(r.version) + "<div class='muted'>" + esc(r.description) + "</div></td><td>" + esc(r.developer) + "</td><td><details><summary class='muted'>扫描</summary><pre class='scan'>" + esc(r.scan_report) + "</pre></details></td><td><button class='btn' onclick=\"review(" + r.id + ",'approve')\">批准发布</button> <button class='btn btn-ghost' onclick=\"review(" + r.id + ",'reject')\">拒绝</button></td></tr>").join("") : '<tr><td colspan="4" class="muted">队列为空</td></tr>';
+  } catch (e) { /* 忽略 */ }
+}
+async function loadDevs() {  try { const rows = await api("/admin/developers");
+    $("dRows").innerHTML = rows.length ? rows.map((r) => "<tr><td>" + esc(r.email) + "<div class='muted'>" + esc(r.display_name) + "</div></td><td>" + esc(r.dev_profile) + "</td><td><button class='btn' onclick=\"devReview(" + r.id + ",'approve')\">开通</button> <button class='btn btn-ghost' onclick=\"devReview(" + r.id + ",'reject')\">拒绝</button></td></tr>").join("") : '<tr><td colspan="3" class="muted">无待审申请</td></tr>';
+  } catch (e) { /* 忽略 */ }
+}
+// ---------- γ：运营台 ----------
+const yuan2 = (c) => "¥" + (Number(c) / 100).toFixed(2);
+async function loadSales() {
+  try { const d = await api("/admin/sales/summary");
+    const t = d.total;
+    const byPlugin = d.by_plugin.map((p) => esc(p.plugin_name) + "：" + yuan2(p.gross_cents) + "（费 " + yuan2(p.platform_fee_cents) + "／净 " + yuan2(p.dev_net_cents) + "，" + p.orders + " 单）").join("<br>");
+    $("salesCard").innerHTML = "总 GMV <b>" + yuan2(t.gross_cents) + "</b> · 订单 <b>" + t.orders + "</b> · 平台收入 <b>" + yuan2(t.platform_fee_cents) + "</b> · 开发者净额合计 <b>" + yuan2(t.dev_net_cents) + "</b>" + (byPlugin ? "<br><span class='muted'>" + byPlugin + "</span>" : "");
+  } catch (e) { $("salesCard").textContent = "加载失败：" + e.message; }
+}
+function exportCsv() {
+  exportCsvReal(new Date().toISOString().slice(0, 7));
+}
+async function exportCsvReal(m) {
+  try { const r = await fetch("/api/admin/sales/export?month=" + m, { headers: { Authorization: "Bearer " + TOKEN } });
+    if (!r.ok) throw new Error("http " + r.status);
+    const blob = await r.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = "market-sales-" + m + ".csv"; a.click();
+    URL.revokeObjectURL(a.href);
+  } catch (e) { say(false, "导出失败：" + e.message); }
+}
+async function loadAdmLicenses() {
+  try { const rows = await api("/admin/licenses");
+    $("admLicRows").innerHTML = rows.length ? rows.map((l) => "<tr><td>" + l.id + "</td><td>" + (l.license_type === "svip" ? "SVIP" : "插件") + "</td><td>" + esc(l.plugin_name ?? "全站") + "</td><td>" + esc(l.licensee) + "</td><td>" + esc(l.buyer ?? "-") + "</td><td>" + (l.state === 0 ? "✅ 有效" : "⛔ 已作废") + "</td><td>" + (l.state === 0 ? "<button class='btn btn-ghost' onclick=\"revokeLic(" + l.id + ")\">作废</button>" : "") + "</td></tr>").join("") : '<tr><td colspan="7" class="muted">无授权记录</td></tr>';
+  } catch (e) { /* 忽略 */ }
+}
+async function revokeLic(id) {
+  const reason = prompt("作废理由（≥5 字）：") ?? "";
+  if (reason.trim().length < 5) { say(false, "须填理由"); return; }
+  try { const d = await api("/admin/licenses/revoke", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, reason }) });
+    say(true, d.msg ?? "已作废"); loadAdmLicenses();
+  } catch (e) { say(false, e.message); }
+}
+async function reissueAll() {
+  if (!confirm("用当前私钥重签全部有效 license？（钥轮换后执行；用户需重新下载）")) return;
+  try { const d = await api("/admin/licenses/reissue-all", { method: "POST", headers: { "content-type": "application/json" } });
+    say(true, d.msg ?? "已重签"); loadAdmLicenses();
+  } catch (e) { say(false, e.message); }
+}
+async function unpublish() {
+  const name = $("un_name").value.trim();
+  if (!name) return;
+  if (!confirm("下架 " + name + "？已装实例不回收，恢复需提交新版本过审。")) return;
+  try { const d = await api("/admin/unpublish", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name }) });
+    say(true, d.msg ?? "已下架"); loadMarket();
+  } catch (e) { say(false, e.message); }
+}
+async function loadEarnings() {
+  try { const d = await api("/dev/earnings");
+    $("earnRows").innerHTML = d.rows.length ? d.rows.map((r) => "<tr><td class='muted'>" + esc(r.order_no.slice(0, 12)) + "…</td><td>" + esc(r.plugin_name) + "</td><td>" + esc(r.licensee) + "</td><td>" + yuan2(r.gross_cents) + "</td><td><b>" + yuan2(r.dev_net_cents) + "</b></td><td class='muted'>" + new Date(Number(r.created_at)).toLocaleDateString() + "</td></tr>").join("") : '<tr><td colspan="6" class="muted">暂无销售记录</td></tr>';
+  } catch (e) { /* 忽略 */ }
+}
+async function review(id, action) {
+  const notes = action === "reject" ? (prompt("拒绝理由（≥5 字）：") ?? "") : "";
+  if (action === "reject" && notes.trim().length < 5) { say(false, "拒绝须填理由"); return; }
+  try { const d = await api("/admin/review", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, action, notes }) });
+    say(true, d.msg ?? "已处理"); loadQueue();
+  } catch (e) { say(false, e.message); }
+}
+async function devReview(id, action) {
+  try { const d = await api("/admin/developers", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, action }) });
+    say(true, d.msg ?? "已处理"); loadDevs();
+  } catch (e) { say(false, e.message); }
+}
+$("logout").onclick = (e) => { e.preventDefault(); TOKEN = ""; localStorage.removeItem("market-token"); refresh(); };
+refresh();
+</script>
+</body>
+</html>

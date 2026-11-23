@@ -1,13 +1,6 @@
-/** 管理后台 API 客户端：M5-α 会话票制（admin JWT）+ X-Admin-Key 运维双通道。 */
-const KEY_STORAGE = "gqshop-admin-key";
+/** 管理后台 API 客户端：M5-α 会话票制（admin JWT）；v1.1.1 删除 X-Admin-Key 运维双通道。 */
 const TOKEN_STORAGE = "gqshop-admin-token";
 
-export function getAdminKey(): string {
-  return localStorage.getItem(KEY_STORAGE) ?? "";
-}
-export function setAdminKey(k: string): void {
-  localStorage.setItem(KEY_STORAGE, k);
-}
 export function getAdminToken(): string {
   return localStorage.getItem(TOKEN_STORAGE) ?? "";
 }
@@ -16,10 +9,9 @@ export function setAdminToken(t: string): void {
 }
 export function clearAdminSession(): void {
   localStorage.removeItem(TOKEN_STORAGE);
-  localStorage.removeItem(KEY_STORAGE);
 }
 export function hasAdminSession(): boolean {
-  return getAdminToken().length > 0 || getAdminKey().length > 0;
+  return getAdminToken().length > 0;
 }
 
 /** 账号密码换取 admin 会话票（8h JWT；不再下发全局 key）。 */
@@ -39,8 +31,6 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
   const headers: Record<string, string> = { "content-type": "application/json" };
   const token = getAdminToken();
   if (token) headers["Authorization"] = `Bearer ${token}`;
-  const key = getAdminKey();
-  if (key) headers["X-Admin-Key"] = key;
   const res = await fetch("/v1" + path, { headers: { ...headers, ...(init?.headers as Record<string, string> | undefined) }, ...init });
   if (res.status === 403) throw new Error("会话失效或权限不足，请重新登录");
   const body = (await res.json()) as { code: number; msg: string; data?: T };
@@ -157,6 +147,8 @@ export interface AdminStation {
   create_time: string;
   username: string | null;
   level_name: string | null;
+  /** 功能池③：插件白名单（null=全允许） */
+  plugin_allow: string[] | null;
 }
 export interface StationStats {
   id: number;
@@ -168,6 +160,8 @@ export interface StationStats {
   order_count: number;
 }
 export const getStations = () => call<AdminStation[]>("/admin/station");
+export const setStationPluginAllow = (id: number, plugins: string[]) =>
+  call<{ msg: string }>(`/admin/station/${id}/plugin-allow`, { method: "PUT", body: JSON.stringify({ plugins }) });
 export const setStationStatus = (id: number, status: number) =>
   call<unknown>(`/admin/station/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) });
 export const getStationStats = () => call<StationStats[]>("/admin/station/stats");
@@ -202,15 +196,24 @@ export interface PhysicalSale {
 export const uploadCover = (file: File) => {
   const fd = new FormData();
   fd.append("file", file);
-  return fetch("/v1/admin/upload", { method: "POST", headers: { "X-Admin-Key": getAdminKey() }, body: fd })
+  return fetch("/v1/admin/upload", { method: "POST", headers: { Authorization: `Bearer ${getAdminToken()}` }, body: fd })
     .then(async (r) => {
       const b = (await r.json()) as { code: number; msg: string; data?: { url: string } };
       if (b.code !== 0) throw new Error(b.msg || "upload failed");
       return b.data!.url;
     });
 };
-export const updateGoods = (id: number, body: { title?: string; cover?: string; content?: string; unit_name?: string }) =>
+export const updateGoods = (id: number, body: { title?: string; cover?: string; content?: string; unit_name?: string; password?: string; pay_content?: string }) =>
   call<{ msg: string }>(`/admin/goods/${id}`, { method: "PATCH", body: JSON.stringify(body) });
+export interface PriceRules {
+  single_cents: number;
+  profit_cents: number;
+  markup_percent: number;
+  note?: string;
+}
+export const getPriceRules = () => call<PriceRules>("/admin/price-rules");
+export const savePriceRules = (r: { single_cents: number; profit_cents: number; markup_percent: number }) =>
+  call<{ msg: string }>("/admin/price-rules", { method: "PUT", body: JSON.stringify(r) });
 export const getShippingTemplates = () => call<ShippingTemplate[]>("/admin/shipping-templates");
 export const createShippingTemplate = (body: { name: string; first_fee: number; append_fee: number; free_threshold?: number; description?: string }) =>
   call<{ id: number }>("/admin/shipping-templates", { method: "POST", body: JSON.stringify(body) });
@@ -293,6 +296,7 @@ export interface PluginRow {
   name: string;
   version: string;
   description: string;
+  has_config?: boolean;
 }
 export interface PluginsView {
   builtin: PluginRow[];
@@ -305,6 +309,33 @@ export const getPlugins = () => call<PluginsView>("/admin/plugins");
 export const togglePlugin = (name: string) =>
   call<{ msg: string; active_plugins: string[] }>(`/admin/plugins/${name}/toggle`, { method: "POST" });
 
+// ---------- v1.2.0 插件配置（plugin.manage） ----------
+export interface PluginConfigField {
+  key: string;
+  label: string;
+  type: "string" | "password" | "number" | "boolean";
+  placeholder?: string;
+  hint?: string;
+}
+export type PluginConfigValue = string | number | boolean;
+export const getPluginConfig = (name: string) =>
+  call<{ schema: PluginConfigField[]; values: Record<string, PluginConfigValue> }>(`/admin/plugins/${name}/config`);
+export const savePluginConfig = (name: string, values: Record<string, PluginConfigValue>) =>
+  call<{ msg: string }>(`/admin/plugins/${name}/config`, { method: "PUT", body: JSON.stringify({ values }) });
+
+// ---------- v1.2.0 插件仪表盘卡片（dashboard.view） ----------
+export type DashboardCardData =
+  | { type: "stats"; items: Array<{ label: string; value: string | number }> }
+  | { type: "list"; columns: string[]; rows: Array<Array<string | number>> }
+  | { type: "text"; text: string };
+export interface DashboardCard {
+  id: string;
+  plugin: string;
+  title: string;
+  data: DashboardCardData;
+}
+export const getDashboardCards = () => call<{ cards: DashboardCard[] }>("/admin/dashboard/cards");
+
 // ---------- M6-α 应用市场（plugin.manage） ----------
 export interface MarketEntryRow {
   name: string;
@@ -313,6 +344,7 @@ export interface MarketEntryRow {
   sha256: string;
   size: number;
   date: string;
+  paid?: boolean; // β：付费插件（安装需 license）
 }
 export interface MarketView {
   available: boolean;
@@ -328,3 +360,5 @@ export const marketRollback = (name: string, version: string) =>
   call<{ msg: string }>(`/admin/market/rollback`, { method: "POST", body: JSON.stringify({ name, version }) });
 export const marketUninstall = (name: string) =>
   call<{ msg: string }>(`/admin/market/uninstall`, { method: "POST", body: JSON.stringify({ name }) });
+export const importMarketLicense = (name: string, content: string) =>
+  call<{ msg: string }>(`/admin/market/license`, { method: "POST", body: JSON.stringify({ name, content }) });

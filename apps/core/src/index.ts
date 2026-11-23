@@ -16,7 +16,7 @@ import * as members from "@gqshop/domain-members";
 
 type AppEnv = kernel.AppEnv;
 
-export function createApp(db: GqshopDb, jwtSecret: string, pool: import("pg").Pool, adminKey: string) {
+export function createApp(db: GqshopDb, jwtSecret: string, pool: import("pg").Pool) {
   const app = new Hono<AppEnv>();
 
   app.use("*", async (c, next) => {
@@ -54,7 +54,7 @@ export function createApp(db: GqshopDb, jwtSecret: string, pool: import("pg").Po
   }
 
   app.route("/", kernel.adminLoginRoutes); // 公开：登录在 admin 认证兜底之前
-  app.use("/v1/admin/*", kernel.requireAdminAuth(adminKey)); // 全局认证兜底
+  app.use("/v1/admin/*", kernel.requireAdminAuth()); // 全局认证兜底（v1.1.1 会话票唯一）
 
   // 域路由（含各自的 admin 端点，权限位由 adminPermGuard 声明）
   app.route("/", members.membershipRoutes);
@@ -68,6 +68,7 @@ export function createApp(db: GqshopDb, jwtSecret: string, pool: import("pg").Po
   app.route("/", kernel.adminGroupRoutes);
   app.route("/", kernel.adminTemplateRoutes);
   app.route("/", kernel.adminPluginRoutes);
+  app.route("/", kernel.adminDashboardRoutes);
   app.route("/", trade.adminTradeRoutes);
   app.route("/", kernel.adminUploadRoutes);
 

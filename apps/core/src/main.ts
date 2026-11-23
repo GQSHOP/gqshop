@@ -10,7 +10,7 @@ import { createDbHandle, dbConfigFromEnv, runMigrations } from "@gqshop/db";
 
 import { createApp } from "./index.js";
 import { seedAdminGroups, loadPlugins, scanTemplates, serveTemplate, bus } from "@gqshop/kernel";
-import { seedMemberships, registerDomainHooks as membersHooks } from "@gqshop/domain-members";
+import { seedMemberships, registerDomainHooks as membersHooks, startMembersJobs } from "@gqshop/domain-members";
 import { seedStationLevels, registerDomainHooks as stationHooks } from "@gqshop/domain-station";
 import { startJobs } from "@gqshop/domain-trade";
 import { registerDomainHooks as contentHooks } from "@gqshop/domain-content";
@@ -18,9 +18,8 @@ import { registerDomainHooks as contentHooks } from "@gqshop/domain-content";
 async function main(): Promise<void> {
   const { db, pool } = createDbHandle(dbConfigFromEnv());
   const jwtSecret = process.env.GQSHOP_JWT_SECRET;
-  const adminKey = process.env.GQSHOP_ADMIN_KEY;
-  if (!jwtSecret || !adminKey) {
-    console.error("[gqshop-core] FATAL: GQSHOP_JWT_SECRET / GQSHOP_ADMIN_KEY not set");
+  if (!jwtSecret) {
+    console.error("[gqshop-core] FATAL: GQSHOP_JWT_SECRET not set");
     process.exit(1);
   }
 
@@ -35,7 +34,7 @@ async function main(): Promise<void> {
   contentHooks(bus);
   console.log("[gqshop-core] migrations applied + seeds + plugins + domain hooks loaded");
 
-  const app = createApp(db, jwtSecret, pool, adminKey);
+  const app = createApp(db, jwtSecret, pool);
   const port = Number(process.env.GQSHOP_PORT ?? 8100);
 
   // user center at /user — register BEFORE storefront catch-all
@@ -85,6 +84,7 @@ async function main(): Promise<void> {
   }
 
   startJobs(pool);
+  startMembersJobs(pool); // 等级到期物理降级（功能池①；价格链的过期掉档在下单时另行校验）
 
   serve({ fetch: app.fetch, port }, (info) => {
     console.log(`[gqshop-core] listening on http://${info.address}:${info.port} (pid ${process.pid})`);

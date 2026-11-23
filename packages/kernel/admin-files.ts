@@ -29,7 +29,7 @@ export const adminLoginRoutes = new Hono<AppEnv>();
 /**
  * 后台账号登录（M5-α 升级：会话票制）：username+password 对 gq_user 验证（role=admin、bcrypt），
  * 通过后签发 admin JWT（8h，scope="admin"）——不再下发全局 GQSHOP_ADMIN_KEY（审计 M3 收口）。
- * X-Admin-Key 保留为机器通道（CI/运维）。失败锁定：uid+IP 双维度 5 次锁 15 分钟（审计 M2 收口）。
+ * v1.1.1：X-Admin-Key 机器通道已删除。失败锁定：uid+IP 双维度 5 次锁 15 分钟（审计 M2 收口）。
  */
 adminLoginRoutes.post("/v1/admin/login", ipRateLimit(60_000, 10), async (c) => {
   const body = (await c.req.json().catch(() => null)) as
@@ -103,7 +103,8 @@ export function readUploadSafe(name: string, env: NodeJS.ProcessEnv = process.en
   return readFileSync(full);
 }
 
-/** 商品编辑：静态 COALESCE UPDATE——未提供的字段保持原值（全参数化，零拼接）。 */
+/** 商品编辑：静态 COALESCE UPDATE——未提供的字段保持原值（全参数化，零拼接）。
+ *  功能池②：password/pay_content（密码商品/付费内容）入编辑面；传空串=清空。 */
 adminUploadRoutes.patch("/v1/admin/goods/:id", async (c) => {
   const denied = await adminPermGuard(c, "goods.manage");
   if (denied) return denied;
@@ -116,8 +117,10 @@ adminUploadRoutes.patch("/v1/admin/goods/:id", async (c) => {
   const cover = typeof body.cover === "string" ? body.cover.slice(0, 255) : null;
   const content = typeof body.content === "string" ? body.content.slice(0, 50000) : null;
   const unitName = typeof body.unit_name === "string" && body.unit_name.trim() ? body.unit_name.trim().slice(0, 30) : null;
-  if (title === null && cover === null && content === null && unitName === null) {
-    return c.json({ code: 400, msg: "nothing to update (title/cover/content/unit_name)" }, 400);
+  const password = typeof body.password === "string" ? body.password.slice(0, 64) : null;
+  const payContent = typeof body.pay_content === "string" ? body.pay_content.slice(0, 20000) : null;
+  if (title === null && cover === null && content === null && unitName === null && password === null && payContent === null) {
+    return c.json({ code: 400, msg: "nothing to update (title/cover/content/unit_name/password/pay_content)" }, 400);
   }
   // gq_goods 无 update_time 列（1:1 平移），仅动业务字段
   const r = await pool.query(
@@ -125,9 +128,11 @@ adminUploadRoutes.patch("/v1/admin/goods/:id", async (c) => {
        title = COALESCE($1, title),
        cover = COALESCE($2, cover),
        content = COALESCE($3, content),
-       unit_name = COALESCE($4, unit_name)
-     WHERE id = $5 AND delete_time IS NULL`,
-    [title, cover, content, unitName, id],
+       unit_name = COALESCE($4, unit_name),
+       password = COALESCE($5, password),
+       pay_content = COALESCE($6, pay_content)
+     WHERE id = $7 AND delete_time IS NULL`,
+    [title, cover, content, unitName, password, payContent, id],
   );
   if (r.rowCount !== 1) return c.json({ code: 404, msg: "goods not found" }, 404);
   return c.json({ code: 0, msg: "updated" });

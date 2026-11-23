@@ -1,0 +1,6 @@
+{
+  "name": "advanced_stats",
+  "version": "1.0.0",
+  "description": "高级统计三卡：近30日商品销量 Top10 / 下单→支付转化率 / 买家复购率——经营诊断进阶包（付费）",
+  "entry": "index.js"
+}

@@ -24,6 +24,83 @@ export interface MarketEntry {
   signature: string;
   size: number;
   date: string;
+  /** β（ADR-012 A4）：付费插件——安装/升级需本地有效 license（ed25519 验签+域名匹配）。 */
+  paid?: boolean;
+}
+
+// ============ β：付费插件 license 验证（ADR-012 A4） ============
+
+/** license 公钥（spki/der/base64，与市场 LICENSE 签发钥配对；轮换=发版+存量重签）。 */
+export const LICENSE_PUBKEY = process.env.GQSHOP_LICENSE_PUBKEY ?? "";
+
+interface LicensePayload {
+  v: number;
+  type: "plugin" | "svip";
+  plugin: string | null;
+  licensee: string;
+  account: number;
+  issued_at: number;
+  expires_at: number | null;
+  nonce: string;
+}
+
+export function licensesDir(): string {
+  return process.env.GQSHOP_LICENSES_DIR ?? "./data/licenses";
+}
+
+function licenseFilePath(plugin: string): string {
+  return join(licensesDir(), `${plugin.replace(/[^a-z0-9_]/g, "")}.lic`);
+}
+
+function thisSiteHost(): string | null {
+  const base = process.env.GQSHOP_PUBLIC_BASE ?? "";
+  try {
+    return new URL(base).hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+/** SVIP 兜底：data/licenses/svip.lic（任一 SVIP 过期校验通过即放行全部付费插件）。 */
+function verifyLicenseObject(parsed: { payload?: unknown; sig?: unknown }, plugin: string, now: number): { ok: boolean; msg: string } {
+  if (!LICENSE_PUBKEY) return { ok: false, msg: "未配置 GQSHOP_LICENSE_PUBKEY（无法校验付费插件 license）" };
+  const payload = parsed.payload as LicensePayload | undefined;
+  const sig = typeof parsed.sig === "string" ? parsed.sig : "";
+  if (!payload || !sig) return { ok: false, msg: "license 文件格式不合法" };
+  // 验签：canon=解析后原键序 stringify（与市场签发侧构造序一致）
+  let valid = false;
+  try {
+    const pub = createPublicKey({ key: Buffer.from(LICENSE_PUBKEY, "base64"), format: "der", type: "spki" });
+    valid = cryptoVerify(null, Buffer.from(JSON.stringify(payload), "utf8"), pub, Buffer.from(sig, "base64"));
+  } catch {
+    valid = false;
+  }
+  if (!valid) return { ok: false, msg: "license 验签失败" };
+  if (payload.expires_at !== null && payload.expires_at <= now) return { ok: false, msg: "license 已过期" };
+  const host = thisSiteHost();
+  if (!host || payload.licensee.toLowerCase() !== host) {
+    return { ok: false, msg: `license 域名不匹配（授权给 ${payload.licensee}，本站 ${host ?? "未配置 PUBLIC_BASE"}）` };
+  }
+  const covers = payload.type === "svip" || (payload.type === "plugin" && payload.plugin === plugin);
+  if (!covers) return { ok: false, msg: `license 不覆盖插件 ${plugin}` };
+  return { ok: true, msg: "ok" };
+}
+
+/** 付费门：data/licenses/{plugin}.lic 或 svip.lic 任一有效即放行；导出供 admin 导入时复验。 */
+export function requirePluginLicense(plugin: string): { ok: boolean; msg: string; content?: string } {
+  const now = Math.floor(Date.now() / 1000);
+  for (const f of [licenseFilePath(plugin), join(licensesDir(), "svip.lic")]) {
+    if (!existsSync(f)) continue;
+    try {
+      const parsed = JSON.parse(readFileSync(f, "utf8")) as { payload?: unknown; sig?: unknown };
+      const r = verifyLicenseObject(parsed, plugin, now);
+      if (r.ok) return { ...r, content: readFileSync(f, "utf8") };
+      return { ok: false, msg: `${f}: ${r.msg}` };
+    } catch {
+      return { ok: false, msg: `${f}: 解析失败` };
+    }
+  }
+  return { ok: false, msg: `付费插件 ${plugin} 需要有效 license（市场购买后经 admin 导入，或放置 ${licenseFilePath(plugin)}）` };
 }
 
 export interface MarketSource {
@@ -140,6 +217,12 @@ export async function installPlugin(
     ? candidates.find((e) => e.version === version)
     : candidates.sort((a, b) => b.date.localeCompare(a.date))[0];
   if (!entry) throw new Error(`market 无版本 ${name}@${version}`);
+
+  // β（ADR-012 A4）：付费门——安装/升级前校验本地 license（已装不回收：只挡新装与升级）
+  if (entry.paid === true) {
+    const lic = requirePluginLicense(name);
+    if (!lic.ok) throw new Error(lic.msg);
+  }
 
   const buf = await source.fetchPackage(entry);
   const sha256 = createHash("sha256").update(buf).digest("hex");

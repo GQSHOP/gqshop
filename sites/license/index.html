@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GQSHOP 应用市场</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,'PingFang SC',sans-serif;background:#f5f6f8;color:#222}
+header{background:linear-gradient(135deg,#1560e8,#1b6dff);color:#fff;padding:48px 20px;text-align:center}
+header h1{font-size:28px;margin-bottom:8px}
+header p{opacity:.85;font-size:14px}
+main{max-width:960px;margin:0 auto;padding:24px 16px}
+.section-title{font-size:16px;font-weight:700;margin:20px 0 12px}
+.card{background:#fff;border-radius:12px;padding:18px 20px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);display:flex;align-items:center;gap:16px}
+.card .icon{width:48px;height:48px;border-radius:12px;background:#eef4ff;display:flex;align-items:center;justify-content:center;font-size:22px;color:#1b6dff;flex-shrink:0}
+.card .info{flex:1;min-width:0}
+.card .name{font-weight:700;font-size:15px}
+.card .name .ver{color:#999;font-weight:400;font-size:12px;margin-left:8px}
+.card .desc{color:#666;font-size:13px;margin-top:4px;line-height:1.5}
+.card .meta{color:#999;font-size:12px;margin-top:6px}
+.card .actions{flex-shrink:0}
+.btn{display:inline-block;padding:8px 20px;border-radius:8px;background:#1b6dff;color:#fff;text-decoration:none;font-size:13px;border:0;cursor:pointer}
+.btn:hover{background:#1560e8}
+.empty{background:#fff;border-radius:12px;padding:40px;text-align:center;color:#999}
+footer{text-align:center;padding:32px 16px;color:#999;font-size:12px}
+.howto{background:#fff;border-radius:12px;padding:18px 20px;margin-top:24px;font-size:13px;color:#555;line-height:2}
+.howto code{background:#eef4ff;padding:2px 6px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+<header>
+<h1>GQSHOP 应用市场</h1>
+<p>插件 · 模板 · 可信分发（sha256 + ed25519 签名链）</p>
+</header>
+<main>
+<div class="section-title" id="count">加载中…</div>
+<div id="list"></div>
+<div class="howto">
+<strong>接入方式</strong>：GQSHOP 后台 → 应用市场，配置市场源：
+<code>GQSHOP_MARKET_URL=https://license.sc9.top/repo</code>
+<br>所有包均经 ed25519 签名，安装时内核自动双验（哈希+签名），篡改即拒。
+<br><strong>开发者上架</strong>：前往 <a href="/console.html" style="color:#1b6dff">开发者控制台</a> 注册账号 → 申请开发者 → 提交插件包（自动检查+人工审核后签名发布）；开发规范见 <a href="/docs.html" style="color:#1b6dff">开发者文档</a>。
+</div>
+</main>
+<footer>© 2026 GQSHOP · 自部署开源电商 · <a href="https://github.com/GQSHOP/gqshop" style="color:#999">GitHub</a> · <a href="/docs.html" style="color:#999">开发者文档</a></footer>
+<script>
+fetch('/repo/market-index.json')
+.then(r=>r.ok?r.json():Promise.reject('市场索引不可达'))
+.then(idx=>{
+  const list=document.getElementById('list');
+  const cnt=document.getElementById('count');
+  if(!idx.length){cnt.textContent='';list.innerHTML='<div class="empty">市场暂无上架包</div>';return}
+  cnt.textContent='上架包（'+idx.length+'）';
+  const seen=new Set();
+  list.innerHTML=idx
+    .filter(e=>{if(seen.has(e.name))return false;seen.add(e.name);return true})
+    .map(e=>'<div class="card">'
+      +'<div class="icon">'+(e.name.startsWith('goods')?'📦':e.name.startsWith('pay')?'💳':e.name.startsWith('tpl')||e.name.includes('template')?'🎨':'🔌')+'</div>'
+      +'<div class="info"><div class="name">'+e.name+'<span class="ver">v'+e.version+'</span></div>'
+      +'<div class="desc">'+(e.description||'')+'</div>'
+      +'<div class="meta">'+Math.round(e.size/1024)+'KB · '+e.date.slice(0,10)+' · sha256 '+e.sha256.slice(0,12)+'…</div></div>'
+      +'<div class="actions"><a class="btn" href="/repo/'+e.url+'">下载</a></div></div>')
+    .join('');
+})
+.catch(()=>{document.getElementById('count').textContent='';
+document.getElementById('list').innerHTML='<div class="empty">市场索引加载失败</div>'});
+</script>
+</body>
+</html>

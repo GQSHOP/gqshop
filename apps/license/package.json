@@ -1,0 +1,24 @@
+{
+  "name": "@gqshop/license",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "GQSHOP 市场站服务（ADR-012 α：账号/上架审核/签包发布；license.sc9.top /api/）",
+  "scripts": {
+    "start": "node src/main.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.14.0",
+    "adm-zip": "^0.5.16",
+    "bcryptjs": "^3.0.2",
+    "hono": "^4.9.0",
+    "pg": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
+    "@types/node": "^24.0.0",
+    "@types/pg": "^8.11.0",
+    "typescript": "^5.8.0"
+  }
+}

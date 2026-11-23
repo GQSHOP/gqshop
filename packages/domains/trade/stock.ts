@@ -1,11 +1,12 @@
 /**
- * M1 后台：商品创建/SKU/卡密导入/订单查看（X-Admin-Key 过渡鉴权）。
+ * M1 后台：商品创建/SKU/卡密导入/订单查看（M5-α 起会话票鉴权；v1.1.1 删除 X-Admin-Key 过渡通道）。
  * 价格单位：分（integer，上游语义）。
  */
 import { Hono } from "hono";
 
 import { adminPermGuard } from "@gqshop/kernel";
 import type { AppEnv } from "@gqshop/kernel";
+import { readAdvancedPriceOpts } from "./pricing.js";
 
 export const adminTradeRoutes = new Hono<AppEnv>();
 
@@ -22,6 +23,9 @@ adminTradeRoutes.post("/v1/admin/goods", async (c) => {
   const marketPrice = Math.max(0, Math.round(Number(body.market_price ?? 0)));
   const sortId = Math.round(Number(body.sort_id ?? 0));
   const content = typeof body.content === "string" ? body.content.slice(0, 20000) : "";
+  // 功能池②：密码商品（购买后商品页查看密码）与付费内容（购买后可见）——可选
+  const password = typeof body.password === "string" ? body.password.slice(0, 64) : null;
+  const payContent = typeof body.pay_content === "string" ? body.pay_content.slice(0, 20000) : null;
   if (!title || guestPrice <= 0) {
     return c.json({ code: 400, msg: "title and guest_price(>0, in cents) required" }, 400);
   }
@@ -30,10 +34,10 @@ adminTradeRoutes.post("/v1/admin/goods", async (c) => {
   }
 
   const r = await pool.query(
-    `INSERT INTO gq_goods (title, type, is_sku, content, sort_id, is_on_shelf, create_time, station_id)
-     VALUES ($1, $2, 'n', $3, $4, 1, $5, 0)
+    `INSERT INTO gq_goods (title, type, is_sku, content, password, pay_content, sort_id, is_on_shelf, create_time, station_id)
+     VALUES ($1, $2, 'n', $3, $4, $5, $6, 1, $7, 0)
      RETURNING id`,
-    [title, type, content, sortId, Date.now()],
+    [title, type, content, password, payContent, sortId, Date.now()],
   );
   const goodsId = r.rows[0].id as number;
 
@@ -206,6 +210,51 @@ adminTradeRoutes.get("/v1/admin/goods", async (c) => {
     [kw, limit, (page - 1) * limit],
   );
   return c.json({ code: 0, data: { list: res.rows, page, limit } });
+});
+
+/** 高级定价规则（功能池④）：读=当前生效值；写=gq_options 三开关+三参数（空/0=关）。 */
+adminTradeRoutes.get("/v1/admin/price-rules", async (c) => {
+  const denied = await adminPermGuard(c, "goods.manage");
+  if (denied) return denied;
+  const pool = c.get("pool");
+  const opts = await readAdvancedPriceOpts(pool);
+  return c.json({
+    code: 0,
+    data: {
+      single_cents: opts.singleCents,
+      profit_cents: opts.profitCents,
+      markup_percent: opts.markupPercent,
+      note: "single=全场统一价（压过会员价）；profit/markup=按 SKU cost_price 计价（会员价覆盖仍优先）；0=关",
+    },
+  });
+});
+
+adminTradeRoutes.put("/v1/admin/price-rules", async (c) => {
+  const denied = await adminPermGuard(c, "goods.manage");
+  if (denied) return denied;
+  const pool = c.get("pool");
+  const body = (await c.req.json().catch(() => null)) as { single_cents?: unknown; profit_cents?: unknown; markup_percent?: unknown } | null;
+  if (!body) return c.json({ code: 400, msg: "invalid json body" }, 400);
+  const clamp = (v: unknown, max: number): number => Math.max(0, Math.min(max, Math.round(Number(v ?? 0) || 0)));
+  const single = clamp(body.single_cents, 10_000_000);
+  const profit = clamp(body.profit_cents, 10_000_000);
+  const markup = clamp(body.markup_percent, 10_000);
+  const entries: Array<[string, string]> = [
+    ["price_single_rule", single > 0 ? "y" : "n"],
+    ["price_single_yuan", (single / 100).toFixed(2)],
+    ["price_profit_rule", profit > 0 ? "y" : "n"],
+    ["price_profit_yuan", (profit / 100).toFixed(2)],
+    ["price_cost_markup", markup > 0 ? "y" : "n"],
+    ["price_markup_percent", String(markup)],
+  ];
+  for (const [name, value] of entries) {
+    await pool.query(
+      `INSERT INTO gq_options (option_name, option_value) VALUES ($1, $2)
+       ON CONFLICT (option_name) DO UPDATE SET option_value = $2`,
+      [name, value],
+    );
+  }
+  return c.json({ code: 0, msg: "定价规则已保存（即时生效）", data: { single_cents: single, profit_cents: profit, markup_percent: markup } });
 });
 
 /** 上下架切换。 */

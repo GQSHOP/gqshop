@@ -1,0 +1,6 @@
+{
+  "name": "order_webhook",
+  "version": "1.0.0",
+  "description": "订单事件通知：新订单 / 支付成功 / 新售后实时推送 webhook（HMAC-SHA256 签名防伪，适配企微/飞书/钉钉机器人）",
+  "entry": "index.js"
+}

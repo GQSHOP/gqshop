@@ -1,7 +1,7 @@
 /**
  * M5-α admin 权限组与会话票（ADR-008 A1）：
  *   - admin JWT 会话票（scope="admin"，8h）替代登录接口下发全局 GQSHOP_ADMIN_KEY（审计 M3 收口）
- *   - X-Admin-Key 保留为机器通道（CI/运维，全权限），双通道并存，废除留 M6
+ *   - v1.1.1：X-Admin-Key 机器通道兼容期结束，GQSHOP_ADMIN_KEY_CHANNEL 开关删除，会话票唯一
  *   - 权限模型：gq_admin_group.menu_permissions JSON { menus:[], perms:["域.动作"|"*"] }
  *     旁路：system_founder_uid option（对齐上游）与 admin_group_id=0（未分组=超管，兼容存量 founder）
  *   - 权限位命名 域.动作：dashboard.view goods.manage stock.manage order.view order.ship
@@ -22,9 +22,7 @@ export interface AdminTokenPayload {
   exp: number;
 }
 
-export type AdminAuth =
-  | { via: "key" }
-  | { via: "jwt"; uid: number; groupId: number };
+export type AdminAuth = { via: "jwt"; uid: number; groupId: number };
 
 export async function signAdminToken(
   secret: string,
@@ -59,17 +57,9 @@ interface AuthEnv {
 }
 
 /** 全局认证兜底（挂 /v1/admin/*，漏挂权限位的路由也不会裸奔）。通过写 adminAuth 供权限检查复用。
- *  M6-γ：X-Admin-Key 机器通道默认退役（会话票唯一）；兼容期显式 GQSHOP_ADMIN_KEY_CHANNEL=on 才认。 */
-export function requireAdminAuth(adminKey: string) {
+ *  v1.1.1：X-Admin-Key 机器通道已删除，仅认 admin 会话票（Bearer JWT）。 */
+export function requireAdminAuth() {
   return async <E extends AuthEnv>(c: Context<E>, next: () => Promise<void>) => {
-    if (process.env.GQSHOP_ADMIN_KEY_CHANNEL === "on") {
-      const keyHeader = c.req.header("X-Admin-Key");
-      if (adminKey && keyHeader === adminKey) {
-        c.set("adminAuth", { via: "key" });
-        await next();
-        return;
-      }
-    }
     const auth = c.req.header("Authorization");
     if (auth?.startsWith("Bearer ")) {
       const payload = await verifyAdminToken(c.get("jwtSecret"), auth.slice(7));
@@ -88,12 +78,12 @@ export function requireAdminAuth(adminKey: string) {
         }
       }
     }
-    return c.json({ code: 403, msg: "admin auth required (session token or X-Admin-Key)" }, 403);
+    return c.json({ code: 403, msg: "admin auth required (session token)" }, 403);
   };
 }
 
-async function hasPerm(pool: Pool, auth: AdminAuth, perm: string): Promise<boolean> {
-  if (auth.via === "key") return true; // 机器通道全权限
+/** 权限位检查（v1.2.0 起导出：仪表盘卡片等注册表按 perm 过滤复用）。 */
+export async function hasPerm(pool: Pool, auth: AdminAuth, perm: string): Promise<boolean> {
   // founder 旁路（system_founder_uid option，对齐上游）
   const founder = await pool.query<{ option_value: string | null }>(
     `SELECT option_value FROM gq_options WHERE option_name = 'system_founder_uid' LIMIT 1`,
@@ -125,7 +115,7 @@ export async function adminPermGuard<E extends AuthEnv>(
   if (!auth) {
     // 挂载于全局兜底之前的历史路由自认证（与 requireAdminAuth 同逻辑）
     const denied = await new Promise<Response | null>((resolve) => {
-      requireAdminAuth(process.env.GQSHOP_ADMIN_KEY ?? "")(c, async () => resolve(null)).then((r) => {
+      requireAdminAuth()(c, async () => resolve(null)).then((r) => {
         if (r) resolve(r);
       });
     });
